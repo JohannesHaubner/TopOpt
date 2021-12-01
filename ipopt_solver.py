@@ -47,20 +47,21 @@ class IPOPTSolver(OptimizationSolver):
         self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
-    def test_constraints(self):
+    def test_constraints(self, option=0):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
         xl = self.k
         x0 = 0.5 * np.ones(xl)
         j0 = self.problem_obj.constraints(x0)
         djx = self.problem_obj.jacobian(x0)
-        ds = 1.0 * np.ones(xl)
-        # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
-        j0 = self.problem_obj.constraints(x0)
-        djx = self.problem_obj.jacobian(x0)
-        epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
-        jlist = [self.problem_obj.constraints(x0 + eps * ds) for eps in epslist]
-        self.perform_first_order_check(jlist, j0, djx, ds, epslist)
+        if option == 1:
+            ds = 1.0 * np.ones(xl)
+            # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
+            j0 = self.problem_obj.constraints(x0)
+            djx = self.problem_obj.jacobian(x0)
+            epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
+            jlist = [self.problem_obj.constraints(x0 + eps * ds) for eps in epslist]
+            self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
     def perform_first_order_check(self, jlist, j0, gradj0, ds, epslist):
@@ -142,11 +143,11 @@ class IPOPTSolver(OptimizationSolver):
             #
             # The callback for calculating the constraints
             print('evaluate constraint')
+            x = self.preprocessing.transformation(x)
             scale2 = 1.0/(self.h*self.h*np.dot(np.ones(len(x)),np.ones(len(x))))
             s = self.param["sphere"]*scale2*self.h*self.h\
                 *(np.dot(np.asarray(x), np.asarray(x))-np.dot(np.ones(len(x)),np.ones(len(x))))
-            transformed_x = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(transformed_x)
+            rho = self.preprocessing.dof_to_rho(x)
             v = scale2*(self.param["vol"]*assemble((0.5*(rho+1))*dx)-self.V)
             return np.array((s,v))  # , d_ct))
 
@@ -155,10 +156,11 @@ class IPOPTSolver(OptimizationSolver):
             # The callback for calculating the Jacobian
             #
             print('evaluate jacobian')
+            x = self.preprocessing.transformation(x)
             scale2 = 1.0 /(self.h * self.h * np.dot(np.ones(len(x)), np.ones(len(x))))
             ds = scale2*self.param["sphere"]*2*self.h*self.h*np.asarray(x)
-            transformed_x = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(transformed_x)
+            ds = self.preprocessing.transformation_chainrule(ds)
+            rho = self.preprocessing.dof_to_rho(x)
             psiv = TestFunction(rho.function_space())
             dv = assemble((0.5*psiv*dx))
             dv = self.preprocessing.dof_to_rho_chainrule(dv, 2)
@@ -257,7 +259,10 @@ class IPOPTSolver(OptimizationSolver):
         )
 
         nlp.addOption('mu_strategy', 'adaptive')
-        # nlp.addOption('derivative_test', 'first-order')
+        nlp.addOption('hessian_approximation', 'limited-memory')
+        nlp.addOption('limited_memory_update_type', 'bfgs')
+        nlp.addOption('limited_memory_max_history', 50)
+
         nlp.addOption('point_perturbation_radius', 0.0)
         nlp.addOption('max_iter', self.param["maxiter_IPOPT"])
         nlp.addOption('tol', 1e-3)

@@ -142,12 +142,18 @@ if __name__ == "__main__":
         y0 = preprocessing.initial_point_trafo(x0)
         z0 = preprocessing.transformation(y0)
         rho = preprocessing.dof_to_rho(z0)
+        rho.rename("density", "density")
         controls_file << rho
         pass
 
     save_control(x0)
 
-    # project x0 onto sphere
+    # move x0 onto sphere
+    x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
+
+    # check if it worked:
+    #y0 = preprocessing.transformation(x0)
+    #print(1./N * 1./N * (np.dot(np.asarray(y0), np.asarray(y0)) - np.dot(np.ones(len(y0)), np.ones(len(y0)))))
 
     # adapt parameters
     param["relax_vol"] = [0., 0.]

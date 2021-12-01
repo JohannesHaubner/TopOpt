@@ -77,3 +77,23 @@ class Preprocessing:
         needs to be done since we apply the affine linear transformation afterwards
         """
         return self.regularization.initial_point_trafo(x0)
+
+    def move_onto_sphere(self, y0, V, delta):
+        """
+        y0 describes the density function defined on the uniform quadrilateral mesh,
+        described in Sec. 7.6
+        """
+        y00 = (2.*V/delta-1.)*np.ones(len(y0))
+        deltay = y0-y00
+        ub = np.ones(len(y0))
+        int1 = np.dot(ub,ub)
+        int2 = np.dot(y00,y00)
+        int3 = np.dot(deltay, deltay)
+        t = np.sqrt((int1-int2)/int3)
+        return y00 + t*deltay
+
+    def move_control_onto_sphere(self, x0, V, delta):
+        y0 = self.regularization.transform(x0)
+        y0 = self.move_onto_sphere(y0, V, delta)
+        return self.regularization.initial_point_trafo(y0)
+
