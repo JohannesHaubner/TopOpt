@@ -4,7 +4,7 @@ import Hs_regularization as reg
 import numpy as np
 
 class Preprocessing:
-    def __init__(self, N, delta, FunctionSpaceDG0):
+    def __init__(self, N, delta, FunctionSpaceDG0, weighting):
         """
         we assume the mesh size to be uniform in x and y direction and
         take advantage of the fact that the numbering of the triangular cells of the rectangular domain is:
@@ -52,7 +52,7 @@ class Preprocessing:
         """
         self.DG0 = FunctionSpaceDG0
         self.k = len(Function(self.DG0).vector()[:])
-        self.regularization = reg.Regularization(N, delta)
+        self.regularization = reg.Regularization(N, delta, weighting)
 
     def transformation(self, x):
         return self.regularization.transform(x)
@@ -90,7 +90,8 @@ class Preprocessing:
         int2 = np.dot(y00,y00)
         int3 = np.dot(deltay, deltay)
         t = np.sqrt((int1-int2)/int3)
-        return y00 + t*deltay
+
+        return y00 +t*deltay
 
     def move_control_onto_sphere(self, x0, V, delta):
         y0 = self.regularization.transform(x0)

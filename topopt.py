@@ -93,11 +93,19 @@ def forward(rho):
 
     return w
 
+def save_control(x0):
+    z0 = preprocessing.transformation(x0)
+    rho = preprocessing.dof_to_rho(z0)
+    rho.rename("density", "density")
+    controls_file << rho
+    pass
+
 if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
 
     # preprocessing class which contains transformation and dof_to_rho-mapping
-    preprocessing = Preprocessing(N,delta,B)
+    weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
+    preprocessing = Preprocessing(N,delta,B, weighting)
 
     x0 = preprocessing.initial_point_trafo(x0)
     y0 = preprocessing.transformation(x0)
@@ -132,35 +140,37 @@ if __name__ == "__main__":
     param["sphere"] = 1. # scaling of spherical constraint 1/|Omega|*h^2*(np.dot(np.ones(len(x)), np.ones(len(x)))-np.dot(np.ones(len(x)),np.ones(len(x))))
     param["relax_vol"] = [0., 0.]
     param["relax_sphere"] = [-1., 0.] #[-1,0]: ||rho||² <= 1, [0,0]: ||rho||² = 1
+    param["obj"] = 1.0
 
     param["maxiter_IPOPT"] = 100
 
-    ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
+    ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
+    ipopt.test_objective()
+    #exit(0)
+    #ipopt.test_constraints(option=1)
     x0 = ipopt.solve(x0)
-
-    def save_control(x0):
-        y0 = preprocessing.initial_point_trafo(x0)
-        z0 = preprocessing.transformation(y0)
-        rho = preprocessing.dof_to_rho(z0)
-        rho.rename("density", "density")
-        controls_file << rho
-        pass
 
     save_control(x0)
 
     # move x0 onto sphere
     x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
 
+    # preprocessing class which contains transformation and dof_to_rho-mapping
+    print("reinitialize preprocessing...............................")
+    weighting = 1e-2  # consider L2-mass-matrix + weighting * Hs-matrix
+    preprocessing = Preprocessing(N, delta, B, weighting)
+
     # check if it worked:
     #y0 = preprocessing.transformation(x0)
     #print(1./N * 1./N * (np.dot(np.asarray(y0), np.asarray(y0)) - np.dot(np.ones(len(y0)), np.ones(len(y0)))))
 
     # adapt parameters
+    param["reg"] = 10.
     param["relax_vol"] = [0., 0.]
     param["relax_sphere"] = [0., 0.]
 
-    for eta in [1000, 5000, 25000]:
+    for eta in [1000./4, 5000./4, 25000./4]:
         param["penal"] = eta
-        ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
+        ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
         x0 = ipopt.solve(x0)
         save_control(x0)

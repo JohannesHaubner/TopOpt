@@ -37,7 +37,7 @@ class IPOPTSolver(OptimizationSolver):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
         xl = self.k
-        x0 = -0.5 * np.ones(xl) # 0.5 * np.ones(xl)
+        x0 = -1.5 * np.ones(xl) # 0.5 * np.ones(xl)
         ds = 1.0 * np.ones(xl)
         # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
         j0 = self.problem_obj.objective(x0)
@@ -51,9 +51,10 @@ class IPOPTSolver(OptimizationSolver):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
         xl = self.k
-        x0 = 0.5 * np.ones(xl)
+        x0 = 0.0 * np.ones(xl)
         j0 = self.problem_obj.constraints(x0)
         djx = self.problem_obj.jacobian(x0)
+        print('j0', j0, 'djx', djx)
         if option == 1:
             ds = 1.0 * np.ones(xl)
             # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
@@ -107,16 +108,18 @@ class IPOPTSolver(OptimizationSolver):
             #
             # x to deformation
             print('evaluate objective')
-            transformed_x = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(transformed_x)
+            scal = self.h*self.h
+            tx = self.preprocessing.transformation(x)
+            rho = self.preprocessing.dof_to_rho(tx)
             j1 = self.rfn(rho.vector()[:])
             print('j1', j1)
-            j = (j1+ 0.5 * self.param["reg"] * np.dot(np.asarray(x), np.asarray(x))
-                 + 0.5 * self.param["penal"]* np.dot(np.maximum(-1.0*np.ones(len(x)) - np.asarray(x), np.zeros(len(x))),
-                                                    np.maximum(-1.0*np.ones(len(x)) -np.asarray(x), np.zeros(len(x))))
-                 + 0.5 * self.param["penal"] * np.dot(
-                        np.maximum(np.asarray(x) - 1.0*np.ones(len(x)), np.zeros(len(x))),
-                        np.maximum(np.asarray(x) - 1.0*np.ones(len(x)), np.zeros(len(x))))
+            j = (self.param["obj"]*j1+ 0.5 * self.param["reg"] * np.dot(np.asarray(x), np.asarray(x))
+                 + 0.5 * self.param["penal"]* scal* np.dot(
+                        np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))),
+                        np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))))
+                 + 0.5 * self.param["penal"] * scal* np.dot(
+                        np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))),
+                        np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))))
                  )
             return j
 
@@ -126,17 +129,19 @@ class IPOPTSolver(OptimizationSolver):
             #
             # print('evaluate derivative of objective funtion')
             print('evaluate gradient')
-            transformed_x = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(transformed_x)
+            scal = self.h*self.h
+            tx = self.preprocessing.transformation(x)
+            rho = self.preprocessing.dof_to_rho(tx)
             new_params = [self.__copy_data(p.data()) for p in self.rfn.controls]
             self.rfn.set_local(new_params, rho.vector().get_local())
             dJf = self.rfn.derivative(forget=False, project=False)  # rf
             dJ = self.preprocessing.dof_to_rho_chainrule(dJf, 2)
             dJ = self.preprocessing.transformation_chainrule(dJ)
-            dJ = dJ + self.param["reg"] * x + self.param["penal"]*self.h*self.h*(
-                np.maximum(np.asarray(x) - 1.0 * np.ones(len(x)), np.zeros(len(x))) -
-                np.maximum(-1.0 * np.ones(len(x)) - np.asarray(x), np.zeros(len(x)))
-            )
+            dJ2 = scal*(
+                np.maximum(np.asarray(tx) - 1.0 * np.ones(len(tx)), np.zeros(len(tx))) -
+                np.maximum(-1.0 * np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))))
+            dJ2 = self.preprocessing.transformation_chainrule(dJ2)
+            dJ = self.param["obj"]*dJ + self.param["reg"] * x + self.param["penal"]*dJ2
             return np.asarray(dJ, dtype=float)
 
         def constraints(self, x):
@@ -144,11 +149,10 @@ class IPOPTSolver(OptimizationSolver):
             # The callback for calculating the constraints
             print('evaluate constraint')
             x = self.preprocessing.transformation(x)
-            scale2 = 1.0/(self.h*self.h*np.dot(np.ones(len(x)),np.ones(len(x))))
-            s = self.param["sphere"]*scale2*self.h*self.h\
-                *(np.dot(np.asarray(x), np.asarray(x))-np.dot(np.ones(len(x)),np.ones(len(x))))
+            scale2 = 1.0/(np.dot(np.ones(len(x)),np.ones(len(x))))
+            s = self.param["sphere"]*(scale2*np.dot(np.asarray(x),np.asarray(x))-1.)
             rho = self.preprocessing.dof_to_rho(x)
-            v = scale2*(self.param["vol"]*assemble((0.5*(rho+1))*dx)-self.V)
+            v = 1.0/self.V*self.param["vol"]*assemble((0.5*(rho+1))*dx)-1.0
             return np.array((s,v))  # , d_ct))
 
         def jacobian(self, x):
@@ -157,14 +161,14 @@ class IPOPTSolver(OptimizationSolver):
             #
             print('evaluate jacobian')
             x = self.preprocessing.transformation(x)
-            scale2 = 1.0 /(self.h * self.h * np.dot(np.ones(len(x)), np.ones(len(x))))
-            ds = scale2*self.param["sphere"]*2*self.h*self.h*np.asarray(x)
+            scale2 = 1.0 /(np.dot(np.ones(len(x)), np.ones(len(x))))
+            ds = scale2*self.param["sphere"]*2.*np.asarray(x)
             ds = self.preprocessing.transformation_chainrule(ds)
             rho = self.preprocessing.dof_to_rho(x)
             psiv = TestFunction(rho.function_space())
             dv = assemble((0.5*psiv*dx))
             dv = self.preprocessing.dof_to_rho_chainrule(dv, 2)
-            dv = scale2*self.param["vol"]*self.preprocessing.transformation_chainrule(dv)
+            dv = 1.0/self.V*self.param["vol"]*self.preprocessing.transformation_chainrule(dv)
             return np.concatenate((ds,dv))  # , d_ct_d))
 
         # def hessianstructure(self):
@@ -265,7 +269,7 @@ class IPOPTSolver(OptimizationSolver):
 
         nlp.addOption('point_perturbation_radius', 0.0)
         nlp.addOption('max_iter', self.param["maxiter_IPOPT"])
-        nlp.addOption('tol', 1e-3)
+        nlp.addOption('tol', 1e-2)
 
         x, info = nlp.solve(x0)
         return x

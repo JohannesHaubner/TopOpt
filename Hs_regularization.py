@@ -5,7 +5,7 @@ import scipy.sparse as sps
 from scipy.linalg import fractional_matrix_power, solve
 
 class Regularization:
-    def __init__(self, N, delta):
+    def __init__(self, N, delta, weighting):
         """
         we assume the mesh size for the degrees of freedom to be uniform quadrilateral in x and y direction
         with numbering
@@ -27,6 +27,8 @@ class Regularization:
 
         |                   |                   |
         ____________________________________________
+
+        as matrix we consider L2-massmatrix + weighting * Hs-matrix
         """
 
         # degrees of freedom at the boundary
@@ -39,7 +41,7 @@ class Regularization:
         self.loc = self.__get_entries_of_local_stencils()
         Hs_glob_matrix = self.__get_global_matrix()
         L2_glob_matrix = self.__get_L2_matrix()
-        self.glob_matrix = Hs_glob_matrix + L2_glob_matrix
+        self.glob_matrix = weighting * Hs_glob_matrix + L2_glob_matrix
 
         # the following step is expensive and not doable in 3d, just needed for IPOPT, see discussion Sec. 7.7
         self.glob_matrix_m05 = self.__inverse_of_square_root(self.glob_matrix)
@@ -78,11 +80,11 @@ class Regularization:
         """
         h = self.h
         sigma = self.sigma
-        prefac = -2*h**(2-2*sigma)
+        prefac = -2*h**(2.-2*sigma)
 
         loc = {}
 
-        loc['e2'] = prefac*(2./(1. - 2.*sigma) *1.039906 + 2.0/(2 - 2*sigma)*(-0.695078))
+        loc['e2'] = prefac*(2./(1. - 2.*sigma) *1.039906 + 2.0/(2 - 2*sigma)*(-0.695978))
         loc['e3'] = prefac*(4./(2. - 2.*sigma) *0.210645)
         loc['e4'] = prefac*1.6422e-1
         loc['e5'] = prefac*1.1512e-1
