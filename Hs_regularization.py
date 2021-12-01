@@ -31,8 +31,6 @@ class Regularization:
         as matrix we consider L2-massmatrix + weighting * Hs-matrix
         """
 
-        # degrees of freedom at the boundary
-
         # entries of local stencil
         self.sigma = 7./16
         self.h = 1.0/N
