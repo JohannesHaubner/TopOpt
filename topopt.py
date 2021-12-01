@@ -88,7 +88,7 @@ def forward(rho):
 
     F = (alpha(rho) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
          inner(grad(p), v) * dx  + inner(div(u), q) * dx)
-    bc = DirichletBC(W.sub(0), InflowOutflow(degree=1), "on_boundary")
+    bc = DirichletBC(W.sub(0), InflowOutflow(degree=2), "on_boundary")
     solve(lhs(F) == rhs(F), w, bcs=bc)
 
     return w
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     param["relax_vol"] = [0., 0.]
     param["relax_sphere"] = [0., 0.]
 
-    for eta in [1000./4, 5000./4, 25000./4]:
+    for eta in [1000.*3/16, 5000.*3/16, 25000.*3/16]:
         param["penal"] = eta
         ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
         x0 = ipopt.solve(x0)
