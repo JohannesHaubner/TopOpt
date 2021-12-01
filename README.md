@@ -1,2 +1,2 @@
 # TopOpt
-To run the code execute topopt.py
+To run the code run topopt.py
