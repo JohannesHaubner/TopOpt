@@ -145,7 +145,7 @@ if __name__ == "__main__":
     param["maxiter_IPOPT"] = 100
 
     ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
-    ipopt.test_objective()
+    #ipopt.test_objective()
     #exit(0)
     #ipopt.test_constraints(option=1)
     x0 = ipopt.solve(x0)

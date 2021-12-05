@@ -269,7 +269,7 @@ class IPOPTSolver(OptimizationSolver):
 
         nlp.addOption('point_perturbation_radius', 0.0)
         nlp.addOption('max_iter', self.param["maxiter_IPOPT"])
-        nlp.addOption('tol', 1e-4)
+        nlp.addOption('tol', 1e-3)
 
         x, info = nlp.solve(x0)
         return x

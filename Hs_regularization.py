@@ -48,7 +48,7 @@ class Regularization:
         """
         solve the system (H^s matrix)^(-0.5) * y = x
         """
-        return solve(self.glob_matrix_m05, x, True)
+        return solve(self.glob_matrix_m05, x, assume_a = 'pos')
 
     def get_matrix(self):
         """
@@ -229,7 +229,8 @@ class Regularization:
     def __inverse_of_square_root(self, M):
         """
         computes M^(-1/2); computational bottleneck of the algorithm; only needed because we work with ipopt
-        which does not support to work with the "correct" inner product; see discussion in Sec.7.7
+        which does not support to work with the "correct" inner product; see discussion in Sec.7.7;
+        actually it would suffice to compute a decomposition M = L^T L and work with L instead of M^(-1/2)
         """
         return fractional_matrix_power(M.todense(), -0.5)
 
