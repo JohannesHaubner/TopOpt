@@ -105,7 +105,8 @@ if __name__ == "__main__":
 
     # preprocessing class which contains transformation and dof_to_rho-mapping
     weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
-    preprocessing = Preprocessing(N,delta,B, weighting)
+    sigma = 7./16
+    preprocessing = Preprocessing(N,delta,B, weighting, sigma)
 
     x0 = preprocessing.initial_point_trafo(x0)
     y0 = preprocessing.transformation(x0)
@@ -145,8 +146,8 @@ if __name__ == "__main__":
     param["maxiter_IPOPT"] = 100
 
     ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
-    #ipopt.test_objective()
-    #exit(0)
+    ipopt.test_objective()
+    exit(0)
     #ipopt.test_constraints(option=1)
     x0 = ipopt.solve(x0)
 
@@ -158,7 +159,7 @@ if __name__ == "__main__":
     # preprocessing class which contains transformation and dof_to_rho-mapping
     print("reinitialize preprocessing...............................")
     weighting = 1e-2  # consider L2-mass-matrix + weighting * Hs-matrix
-    preprocessing = Preprocessing(N, delta, B, weighting)
+    preprocessing = Preprocessing(N, delta, B, weighting, sigma)
 
     # check if it worked:
     #y0 = preprocessing.transformation(x0)

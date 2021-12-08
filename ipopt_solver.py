@@ -37,8 +37,10 @@ class IPOPTSolver(OptimizationSolver):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
         xl = self.k
-        x0 = -1.5 * np.ones(xl) # 0.5 * np.ones(xl)
+        x0 = -0.5 * np.ones(xl) # 0.5 * np.ones(xl)
         ds = 1.0 * np.ones(xl)
+        x0 = self.preprocessing.initial_point_trafo(x0)
+        ds = self.preprocessing.initial_point_trafo(ds)
         # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
         j0 = self.problem_obj.objective(x0)
         djx = self.problem_obj.gradient(x0)
@@ -117,7 +119,7 @@ class IPOPTSolver(OptimizationSolver):
                  + 0.5 * self.param["penal"]* scal* np.dot(
                         np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))),
                         np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))))
-                 + 0.5 * self.param["penal"] * scal* np.dot(
+                 + 0.5 * self.param["penal"]* scal* np.dot(
                         np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))),
                         np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))))
                  )
@@ -170,43 +172,6 @@ class IPOPTSolver(OptimizationSolver):
             dv = self.preprocessing.dof_to_rho_chainrule(dv, 2)
             dv = 1.0/self.V*self.param["vol"]*self.preprocessing.transformation_chainrule(dv)
             return np.concatenate((ds,dv))  # , d_ct_d))
-
-        # def hessianstructure(self):
-        #    #
-        #    # The structure of the Hessian
-        #    # Note:
-        #    # The default hessian structure is of a lower triangular matrix. Therefore
-        #    # this function is redundant. I include it as an example for structure
-        #    # callback.
-        #    #
-        #    global hs
-        #
-        #    hs = sps.coo_matrix(np.tril(np.ones((4, 4))))
-        #    return (hs.col, hs.row)
-        #
-        # def hessian(self, x, lagrange, obj_factor):
-        #    #
-        #    # The callback for calculating the Hessian
-        #    #
-        #    H = obj_factor*np.array((
-        #            (2*x[3], 0, 0, 0),
-        #            (x[3],   0, 0, 0),
-        #            (x[3],   0, 0, 0),
-        #            (2*x[0]+x[1]+x[2], x[0], x[0], 0)))
-        #
-        #    H += lagrange[0]*np.array((
-        #            (0, 0, 0, 0),
-        #            (x[2]*x[3], 0, 0, 0),
-        #            (x[1]*x[3], x[0]*x[3], 0, 0),
-        #            (x[1]*x[2], x[0]*x[2], x[0]*x[1], 0)))
-        #
-        #    H += lagrange[1]*2*np.eye(4)
-        #
-        #    #
-        #    # Note:
-        #    #
-        #    #
-        #    return H[hs.row, hs.col]
 
         def intermediate(
                 self,

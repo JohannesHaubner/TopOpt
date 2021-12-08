@@ -1,11 +1,12 @@
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
+from quadrature.quadrature import save_weights
 import scipy.sparse as sps
-from scipy.linalg import fractional_matrix_power, solve
+import pickle
 
-class Regularization:
-    def __init__(self, N, delta, weighting):
+class AssembleHs:
+    def __init__(self, N, delta, sigma):
         """
         we assume the mesh size for the degrees of freedom to be uniform quadrilateral in x and y direction
         with numbering
@@ -28,49 +29,31 @@ class Regularization:
         |                   |                   |
         ____________________________________________
 
-        as matrix we consider L2-massmatrix + weighting * Hs-matrix
         """
 
         # entries of local stencil
-        self.sigma = 7./16
+        self.sigma = sigma
+        string = "./quadrature/integral_approximations_sigma_" + str(self.sigma) + ".pkl"
+        try:
+            file = open(string, "rb")
+        except:
+            save_weights(sigma)
+            file = open(string, "rb")
+        self.ints = pickle.load(file)
+
         self.h = 1.0/N
         self.nx = int(delta*N)
         self.ny = int(N)
         self.loc = self.__get_entries_of_local_stencils()
-        Hs_glob_matrix = self.__get_global_matrix()
-        L2_glob_matrix = self.__get_L2_matrix()
-        self.glob_matrix = weighting * Hs_glob_matrix + L2_glob_matrix
+        self.Hs_glob_matrix = self.__get_global_matrix()
+        self.L2_glob_matrix = self.__get_L2_matrix()
 
-        # the following step is expensive and not doable in 3d, just needed for IPOPT, see discussion Sec. 7.7
-        self.glob_matrix_m05 = self.__inverse_of_square_root(self.glob_matrix)
 
-    def initial_point_trafo(self, x):
+    def get_matrix(self, weighting):
         """
-        solve the system (H^s matrix)^(-0.5) * y = x
+        returns L^2-matrix + weighting*H^s-matrix
         """
-        return solve(self.glob_matrix_m05, x, assume_a = 'pos')
-
-    def get_matrix(self):
-        """
-        returns the H^s matrix
-        """
-        return self.glob_matrix
-
-    def get_transformation_matrix(self):
-        """
-        return the inverse of the square root of the H^s matrix
-        """
-        return self.glob_matrix_m05
-
-    def transform(self, x):
-        """
-        x --> (H^s matrix)^(-1/2)*x, needed for "discrete hack" fo perform IPOPT with the correct inner product
-        (see Sec. 7.7)
-        """
-        return np.dot(self.glob_matrix_m05,x)
-
-    def transform_chainrule(self, djy):
-        return np.dot(self.glob_matrix_m05.T, djy)
+        return self.L2_glob_matrix + weighting * self.Hs_glob_matrix
 
     def __get_entries_of_local_stencils(self):
         """
@@ -82,18 +65,19 @@ class Regularization:
 
         loc = {}
 
-        loc['e2'] = prefac*(2./(1. - 2.*sigma) *1.039906 + 2.0/(2 - 2*sigma)*(-0.695978))
-        loc['e3'] = prefac*(4./(2. - 2.*sigma) *0.210645)
-        loc['e4'] = prefac*1.6422e-1
-        loc['e5'] = prefac*1.1512e-1
-        loc['e6'] = prefac*4.8272e-2
-        loc['e7'] = prefac*3.5498e-2
-        loc['e8'] = prefac*2.5427e-2
-        loc['e9'] = prefac*6.9627e-3
-        loc['e10'] = prefac*2.1142e-4
-        loc['e11'] = prefac*9.2385e-4
-        loc['e12'] = prefac*3.7609e-4
-        loc['e13'] = prefac*1.1380e-5
+        loc['e2'] = prefac*(2./(1. - 2.*sigma) *self.ints['int2_1'][0]
+                            + 2.0/(2 - 2*sigma)**self.ints['int2_2'][0])
+        loc['e3'] = prefac*(4./(2. - 2.*sigma) *self.ints['int3'][0])
+        loc['e4'] = prefac*self.ints['int4'][0]
+        loc['e5'] = prefac*self.ints['int5'][0]
+        loc['e6'] = prefac*self.ints['int6'][0]
+        loc['e7'] = prefac*self.ints['int7'][0]
+        loc['e8'] = prefac*self.ints['int8'][0]
+        loc['e9'] = prefac*self.ints['int9'][0]
+        loc['e10'] = prefac*self.ints['int10'][0]
+        loc['e11'] = prefac*self.ints['int11'][0]
+        loc['e12'] = prefac*self.ints['int12'][0]
+        loc['e13'] = prefac*self.ints['int13'][0]
 
         loc['e1a'] = (-4 * loc['e2'] - 4 * loc['e3'] - 4 * loc['e4'] - 8 * loc['e5'] - 4 * loc['e6'] - 4 * loc['e7']
                       - 8 * loc['e8'] - 8 * loc['e9'] - 4 * loc['e10'] - 4 * loc['e11'] - 8 * loc['e12'] - 8 * loc[
@@ -225,15 +209,6 @@ class Regularization:
         M = M + Mmod
 
         return M
-
-    def __inverse_of_square_root(self, M):
-        """
-        computes M^(-1/2); computational bottleneck of the algorithm; only needed because we work with ipopt
-        which does not support to work with the "correct" inner product; see discussion in Sec.7.7;
-        actually it would suffice to compute a decomposition M = L^T L and work with L instead of M^(-1/2)
-        """
-        return fractional_matrix_power(M.todense(), -0.5)
-
 
     def __values_boundary_correction(self):
         val={}
