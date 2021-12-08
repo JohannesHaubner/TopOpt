@@ -55,17 +55,17 @@ class Preprocessing:
         self.k = len(Function(self.DG0).vector()[:])
         self.h = 1./N
         regularization = reg.AssembleHs(N, delta, 0.5*sigma)
-        self.matrix = self.h*regularization.get_matrix(weighting)
+        self.matrix = 1./self.h*regularization.get_matrix(weighting)
 
     def transformation(self, x):
         """
-        x --> (h * H^(sigma/2)_matrix)^(-1)*x
+        x --> (1./h * H^(sigma/2)_matrix)^(-1)*x
         """
         return spsolve(self.matrix, x)
 
     def transformation_chainrule(self, djy):
         """
-        djy --> (h * H^(sigma/2)_matrix)^(-T)*djy
+        djy --> (1./h * H^(sigma/2)_matrix)^(-T)*djy
         """
         return spsolve(self.matrix.transpose(), djy)
 
