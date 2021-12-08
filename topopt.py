@@ -153,12 +153,9 @@ if __name__ == "__main__":
 
     save_control(x0)
 
-    # move x0 onto sphere
-    x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
-
     # preprocessing class which contains transformation and dof_to_rho-mapping
-    print("reinitialize preprocessing...............................")
-    weighting = 1e-2  # consider L2-mass-matrix + weighting * Hs-matrix
+    print("reinitialize preprocessing...............................") #can be done better!! no reinit
+    weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
     preprocessing = Preprocessing(N, delta, B, weighting, sigma)
 
     # check if it worked:
@@ -166,12 +163,15 @@ if __name__ == "__main__":
     #print(1./N * 1./N * (np.dot(np.asarray(y0), np.asarray(y0)) - np.dot(np.ones(len(y0)), np.ones(len(y0)))))
 
     # adapt parameters
-    param["reg"] = 10.
+    param["reg"] = 1.
     param["relax_vol"] = [0., 0.]
     param["relax_sphere"] = [0., 0.]
 
-    for eta in [1000.*3/16, 5000.*3/16, 25000.*3/16]:
+    for eta in [10, 100, 1000]:
         param["penal"] = eta
+        # move x0 onto sphere
+        x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
+        # solve optimization problem
         ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
         x0 = ipopt.solve(x0)
         save_control(x0)
