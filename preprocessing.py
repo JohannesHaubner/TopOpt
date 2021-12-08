@@ -113,8 +113,7 @@ class Preprocessing:
         """
         move control x0 (ndarray of dofs on quadrilateral mesh) onto sphere that is defined via V and delta
         """
-        breakpoint()
-        y0 = self.transform(x0)
+        y0 = self.transformation(x0)
         y0 = self.move_onto_sphere(y0, V, delta)
-        return self.regularization.initial_point_trafo(y0)
+        return self.initial_point_trafo(y0)
 
