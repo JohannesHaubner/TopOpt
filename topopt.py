@@ -143,7 +143,7 @@ if __name__ == "__main__":
     param["relax_sphere"] = [-1., 0.] #[-1,0]: ||rho||² <= 1, [0,0]: ||rho||² = 1
     param["obj"] = 1.0
 
-    param["maxiter_IPOPT"] = 100
+    param["maxiter_IPOPT"] = 150
 
     ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
     #ipopt.test_objective()
