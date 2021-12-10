@@ -30,7 +30,7 @@ def alpha(rho):
                                                      alphabar*(-1.0/16*rho**4 + 3.0/8*rho**2 -0.5*rho + 3.0/16),
                                                      -1.0*alphabar*rho))
 
-N = 40
+N = 100
 delta = 1.5  # The aspect ratio of the domain, 1 high and \delta wide
 V = 1.0/3 * delta  # want the fluid to occupy 1/3 of the domain
 mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), int(delta*N), N))
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
 
     # preprocessing class which contains transformation and dof_to_rho-mapping
-    weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
+    weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
     preprocessing = Preprocessing(N,delta,B, weighting, sigma)
 
@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     # preprocessing class which contains transformation and dof_to_rho-mapping
     print("reinitialize preprocessing...............................") #can be done better!! no reinit
-    weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
+    weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
     preprocessing = Preprocessing(N, delta, B, weighting, sigma)
 
     # check if it worked:
