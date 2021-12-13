@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
     param["maxiter_IPOPT"] = 150
 
-    ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1. / N, V)
+    ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
     #ipopt.test_objective()
     #exit(0)
     #ipopt.test_constraints(option=1)
@@ -153,22 +153,25 @@ if __name__ == "__main__":
 
     save_control(x0)
 
-    # preprocessing class which contains transformation and dof_to_rho-mapping
-    print("reinitialize preprocessing...............................") #can be done better!! no reinit
-    weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
-    preprocessing = Preprocessing(N, delta, B, weighting, sigma)
-
     # check if it worked:
     #y0 = preprocessing.transformation(x0)
     #print(1./N * 1./N * (np.dot(np.asarray(y0), np.asarray(y0)) - np.dot(np.ones(len(y0)), np.ones(len(y0)))))
 
     # adapt parameters
-    param["reg"] = 1.
+    param["reg"] = 10.
     param["relax_vol"] = [0., 0.]
     param["relax_sphere"] = [0., 0.]
 
-    for eta in [10, 100, 1000]:
-        param["penal"] = eta
+    weight = [0.1, 0.05, 0.025, 0.025]
+    eta = [200, 200, 200, 1000]
+
+    for j in range(len(eta)):
+        # preprocessing class which contains transformation and dof_to_rho-mapping
+        print("reinitialize preprocessing...............................")  # can be done better!! no reinit
+        weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
+        preprocessing = Preprocessing(N, delta, B, weighting, sigma)
+
+        param["penal"] = eta[j]
         # move x0 onto sphere
         x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
         # solve optimization problem
