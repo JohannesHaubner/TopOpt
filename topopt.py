@@ -22,8 +22,6 @@ alphaunderbar = 2.5 * mu / (100**2)  # parameter for \alpha
 alphabar = 2.5 * mu / (0.01**2)      # parameter for \alpha
 q = Constant(0.01) # q value that controls difficulty/discrete-valuedness of solution
 
-controls_file = File('./Output/final_controls.pvd')
-
 def alpha(rho):
     """Inverse permeability as a function of rho, equation (40)"""
     return conditional(gt(rho, 1.0),0.0, conditional(gt(rho, -1.0),
@@ -34,6 +32,8 @@ N = 100
 delta = 1.5  # The aspect ratio of the domain, 1 high and \delta wide
 V = 1.0/3 * delta  # want the fluid to occupy 1/3 of the domain
 mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), int(delta*N), N))
+
+controls_file = File('./Output/final_controls_' + str(N) +'.pvd')
 
 # test if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     w   = forward(rho)
     (u, p) = split(w)
 
-    controls = File("./Output/control_iterations_guess.pvd")
-    allctrls = File("./Output/allcontrols.pvd")
+    controls = File("./Output/control_iterations_guess" + str(N) +".pvd")
+    allctrls = File("./Output/allcontrols" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
 
 
