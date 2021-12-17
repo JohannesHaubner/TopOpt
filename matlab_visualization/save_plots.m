@@ -1,6 +1,6 @@
-loc = '/home/joha/Documents/TopOpt/Output/d=%d.mat';
-saveloc_3d =  '/home/joha/Documents/TopOpt/Output/3d_d=%d';
-saveloc_2d =  '/home/joha/Documents/TopOpt/Output/2d_d=%d';
+loc = '/home/joha/Documents/TopOpt/Output/matlab_controls_%d_%d.mat';
+saveloc_3d =  '/home/joha/Documents/TopOpt/Output/3d_d_%d=%d';
+saveloc_2d =  '/home/joha/Documents/TopOpt/Output/2d_d_%d=%d';
 
 n = 5 % number of files
 
@@ -11,9 +11,9 @@ ny= 41;
 gentri_nx_ny;
 
 for i= 1:n
-    location = sprintf(loc,i);
-    sloc3d = sprintf(saveloc_3d, i);
-    sloc2d = sprintf(saveloc_2d, i);
+    location = sprintf(loc,ny-1, i);
+    sloc3d = sprintf(saveloc_3d, ny-1, i);
+    sloc2d = sprintf(saveloc_2d, ny-1, i);
     l_x0 = load(location);
     l_x0 = l_x0.data';
     f1 = figure;

@@ -39,6 +39,6 @@ global v t
         colormap_tum_4(2:end,:)];
     colormap(colormap_tum_all);
     caxis([-2 2]);
-    zlim([-2 2]);
+    zlim([-2.2 2.2]);
 end
 

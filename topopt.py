@@ -1,6 +1,7 @@
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
+from scipy import io
 
 from preprocessing import Preprocessing
 from ipopt_solver import IPOPTSolver
@@ -93,11 +94,15 @@ def forward(rho):
 
     return w
 
-def save_control(x0):
+def save_control(x0, controls_file, index=-1): #TODO
     z0 = preprocessing.transformation(x0)
     rho = preprocessing.dof_to_rho(z0)
     rho.rename("density", "density")
     controls_file << rho
+    if index +1:
+        print('index')
+        filename = './Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
+        io.savemat(filename, mdict={'data': z0})
     pass
 
 if __name__ == "__main__":
@@ -109,6 +114,7 @@ if __name__ == "__main__":
     preprocessing = Preprocessing(N,delta,B, weighting, sigma)
 
     x0 = preprocessing.initial_point_trafo(x0)
+    save_control(x0, controls_file, 0)
     y0 = preprocessing.transformation(x0)
     rho = preprocessing.dof_to_rho(y0)
 
@@ -151,7 +157,7 @@ if __name__ == "__main__":
     #ipopt.test_constraints(option=1)
     x0 = ipopt.solve(x0)
 
-    save_control(x0)
+    save_control(x0, controls_file, 0)
 
     # check if it worked:
     #y0 = preprocessing.transformation(x0)
@@ -177,4 +183,4 @@ if __name__ == "__main__":
         # solve optimization problem
         ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
         x0 = ipopt.solve(x0)
-        save_control(x0)
+        save_control(x0, controls_file, j+1)
