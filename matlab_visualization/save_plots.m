@@ -1,6 +1,6 @@
-loc = '/home/joha/Documents/TopOpt/Output/matlab_controls_%d_%d.mat';
-saveloc_3d =  '/home/joha/Documents/TopOpt/Output/3d_d_%d=%d';
-saveloc_2d =  '/home/joha/Documents/TopOpt/Output/2d_d_%d=%d';
+loc = '../TopOpt/Output/matlab_controls_%d_%d.mat';
+saveloc_3d =  '../TopOpt/Output/3d_d_%d=%d';
+saveloc_2d =  '../TopOpt/Output/2d_d_%d=%d';
 
 n = 5 % number of files
 
