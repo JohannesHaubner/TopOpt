@@ -3,6 +3,7 @@ from dolfin_adjoint import *
 import numpy as np
 from quadrature.quadrature import save_weights
 import scipy.sparse as sps
+import scipy.sparse as sparse
 import pickle
 
 class AssembleHs:
@@ -53,7 +54,7 @@ class AssembleHs:
         """
         returns L^2-matrix + weighting*H^s-matrix
         """
-        return self.L2_glob_matrix + weighting * self.Hs_glob_matrix
+        return self.with_coo(self.L2_glob_matrix, weighting*self.Hs_glob_matrix) #self.L2_glob_matrix + weighting * self.Hs_glob_matrix
 
     def __get_entries_of_local_stencils(self):
         """
@@ -109,6 +110,17 @@ class AssembleHs:
         ind = np.asarray(range(ndofs))
         val = self.h*self.h*np.ones(ndofs)
         return sps.csr_matrix((val, (ind, ind)), shape=(ndofs, ndofs))
+
+    @staticmethod
+    def with_coo(x, y):
+        # add two csc matrices
+        x = x.tocoo()
+        y = y.tocoo()
+        d = np.concatenate((x.data, y.data))
+        r = np.concatenate((x.row, y.row))
+        c = np.concatenate((x.col, y.col))
+        C = sparse.coo_matrix((d, (r, c)))
+        return C.tocsc()
 
     def __get_global_matrix(self):
         """
