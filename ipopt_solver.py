@@ -6,41 +6,92 @@ import backend
 
 from pyadjoint.optimization.optimization_solver import OptimizationSolver
 from pyadjoint.reduced_functional_numpy import ReducedFunctionalNumPy
+from scipy.sparse.linalg import spsolve, splu
+from scipy.sparse import diags
 
 
 import ipopt
 
 import matplotlib.pyplot as plt
 
+class IPOPTProblem:
+    def __init__(self, Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg):
+        """
+        Jhat:                   list of different objective function summands
+        scaling_Jhat:           list of floats with same length as Jhat that specifies how the sum of the different
+                                objective function summands is taken
+        constraints:            list of constraints
+        scaling_constraints:    list with same length as constraints that specifies scaling of constraints
+        bounds:                 list with same length as constraints, each element being a tuple of a lower and upper
+                                bound
+        preprocessing:          contains dofs_to_control and its chainrule
+        inner_product_matrix:   inner product that Ipopt should use, discrete hack via sparse Cholesky
+        reg:                    regularization parameter
+        """
+        self.Jhat = [ReducedFunctionalNumPy(Jhat[i]) for i in range(len(Jhat)) ]
+        self.scaling_Jhat = scaling_Jhat
+        self.constraints = constraints
+        self.scaling_constraints = scaling_constraints
+        self.preprocessing = preprocessing
+        self.inner_product_matrix = inner_product_matrix
+        self.trafo_matrix = self.sparse_cholesky(inner_product_matrix).transpose()
+        self.reg = reg
+        self.bounds = bounds
+
+    @ staticmethod
+    def sparse_cholesky(A):
+        # input matrix A sparse symmetric positive-definite
+        n = A.shape[0]
+        LU = splu(A, permc_spec='NATURAL', diag_pivot_thresh=0)  # sparse LU decomposition
+
+        if (LU.perm_r == np.arange(n)).all() and (LU.U.diagonal() > 0).all():  # check the matrix A is positive definite
+            return LU.L.dot(diags(LU.U.diagonal() ** 0.5))
+        else:
+            sys.exit('The matrix is not positive definite')
+
+    def transformation(self, x):
+        """
+        x --> (L^T)^(-1)*x
+        """
+        return spsolve(self.trafo_matrix, x)
+
+    def transformation_chainrule(self, djy):
+        """
+        djy --> (L^T)^(-T)*djy
+        """
+        return spsolve(self.trafo_matrix.transpose(), djy)
+
+    def initial_point_trafo(self, x0):
+        """
+        needs to be done since we apply the affine linear transformation afterwards
+        """
+        return self.trafo_matrix.dot(x0)
+
 
 class IPOPTSolver(OptimizationSolver):
-    def __init__(self, preprocessing, num_dofs_DG0_quad, rf, param, h, V, parameters=None):
+    def __init__(self, problem, parameters=None):
         try:
             import ipopt
         except ImportError:
             print("You need to install cyipopt. (It is recommended to install IPOPT with HSL support!)")
             raise
-        self.preprocessing = preprocessing
-        self.k = int(num_dofs_DG0_quad/2)
-        self.h = h
-        self.V = V
-        self.param = param
-        self.rfn = ReducedFunctionalNumPy(rf)
+        self.problem = problem
         self.problem_obj = self.create_problem_obj(self)
+
 
         print('Initialization of IPOPTSolver finished')
 
     def create_problem_obj(self, outer):
         return IPOPTSolver.shape_opt_prob(outer)
 
-    def test_objective(self):
+    def test_objective(self, k):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
-        xl = self.k
+        xl = k
         x0 = -0.5 * np.ones(xl) # 0.5 * np.ones(xl)
         ds = 1.0 * np.ones(xl)
-        x0 = self.preprocessing.initial_point_trafo(x0)
-        ds = self.preprocessing.initial_point_trafo(ds)
+        x0 = self.problem.initial_point_trafo(x0)
+        ds = self.problem.initial_point_trafo(ds)
         # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
         j0 = self.problem_obj.objective(x0)
         djx = self.problem_obj.gradient(x0)
@@ -49,21 +100,20 @@ class IPOPTSolver(OptimizationSolver):
         self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
-    def test_constraints(self, option=0):
+    def test_constraints(self, k, ind, option=0):
         # check dof_to_deformation with first order derivative check
         print('Extension.test_dof_to_deformation started.......................')
-        xl = self.k
-        x0 = 0.0 * np.ones(xl)
-        j0 = self.problem_obj.constraints(x0)
+        xl = k
+        x0 = 0.24 * np.ones(xl)
+        j0 = self.problem_obj.constraints(x0)[ind]
         djx = self.problem_obj.jacobian(x0)
+        djx = djx[range(k*ind, k*(ind+1), 1)]
         print('j0', j0, 'djx', djx)
         if option == 1:
             ds = 1.0 * np.ones(xl)
             # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
-            j0 = self.problem_obj.constraints(x0)
-            djx = self.problem_obj.jacobian(x0)
             epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
-            jlist = [self.problem_obj.constraints(x0 + eps * ds) for eps in epslist]
+            jlist = [self.problem_obj.constraints(x0 + eps * ds)[ind] for eps in epslist]
             self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
@@ -96,13 +146,10 @@ class IPOPTSolver(OptimizationSolver):
 
         return
 
+
     class shape_opt_prob(object):
         def __init__(self, outer):
-            self.preprocessing = outer.preprocessing
-            self.rfn = outer.rfn
-            self.param = outer.param
-            self.h = outer.h
-            self.V = outer.V
+            self.problem = outer.problem
 
         def objective(self, x):
             #
@@ -110,19 +157,12 @@ class IPOPTSolver(OptimizationSolver):
             #
             # x to deformation
             print('evaluate objective')
-            scal = self.h*self.h
-            tx = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(tx)
-            j1 = self.rfn(rho.vector()[:])
-            print('j1', j1)
-            j = (self.param["obj"]*j1+ 0.5 * self.param["reg"] * np.dot(np.asarray(x), np.asarray(x))
-                 + 0.5 * self.param["penal"]* scal* np.dot(
-                        np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))),
-                        np.maximum(-1.0*np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))))
-                 + 0.5 * self.param["penal"]* scal* np.dot(
-                        np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))),
-                        np.maximum(np.asarray(tx) - 1.0*np.ones(len(tx)), np.zeros(len(tx))))
-                 )
+            tx = self.problem.transformation(x)
+            rho = self.problem.preprocessing.dof_to_rho(tx)
+            j = 0
+            for i in range(len(self.problem.Jhat)):
+                j += self.problem.scaling_Jhat[i]*self.problem.Jhat[i](rho.vector()[:])
+            j += 0.5 * self.problem.reg * np.dot(np.asarray(x), np.asarray(x))       # regularization
             return j
 
         def gradient(self, x):
@@ -131,47 +171,53 @@ class IPOPTSolver(OptimizationSolver):
             #
             # print('evaluate derivative of objective funtion')
             print('evaluate gradient')
-            scal = self.h*self.h
-            tx = self.preprocessing.transformation(x)
-            rho = self.preprocessing.dof_to_rho(tx)
-            new_params = [self.__copy_data(p.data()) for p in self.rfn.controls]
-            self.rfn.set_local(new_params, rho.vector().get_local())
-            dJf = self.rfn.derivative(forget=False, project=False)  # rf
-            dJ = self.preprocessing.dof_to_rho_chainrule(dJf, 2)
-            dJ = self.preprocessing.transformation_chainrule(dJ)
-            dJ2 = scal*(
-                np.maximum(np.asarray(tx) - 1.0 * np.ones(len(tx)), np.zeros(len(tx))) -
-                np.maximum(-1.0 * np.ones(len(tx)) - np.asarray(tx), np.zeros(len(tx))))
-            dJ2 = self.preprocessing.transformation_chainrule(dJ2)
-            dJ = self.param["obj"]*dJ + self.param["reg"] * x + self.param["penal"]*dJ2
+            tx = self.problem.transformation(x)
+            rho = self.problem.preprocessing.dof_to_rho(tx)
+            # savety feature:
+            if (max(abs(self.problem.Jhat[0].get_controls() - rho.vector()[:])) > 1e-12):
+                print('update control')
+                [self.problem.Jhat[i](rho.vector()[:]) for i in range(len(self.problem.Jhat))]
+            dJf = np.zeros(len(rho.vector()[:]))
+            for i in range(len(self.problem.Jhat)):
+                dJf += self.problem.scaling_Jhat[i]*self.problem.Jhat[i].derivative(forget=False, project=False)
+            dJ = self.problem.preprocessing.dof_to_rho_chainrule(dJf, 2)
+            dJ = self.problem.transformation_chainrule(dJ)
+            dJ += self.problem.reg * x
             return np.asarray(dJ, dtype=float)
 
         def constraints(self, x):
             #
             # The callback for calculating the constraints
             print('evaluate constraint')
-            x = self.preprocessing.transformation(x)
-            scale2 = 1.0/(np.dot(np.ones(len(x)),np.ones(len(x))))
-            s = self.param["sphere"]*(scale2*np.dot(np.asarray(x),np.asarray(x))-1.)
-            rho = self.preprocessing.dof_to_rho(x)
-            v = 1.0/self.V*self.param["vol"]*assemble((0.5*(rho+1))*dx)-1.0
-            return np.array((s,v))  # , d_ct))
+            xt = self.problem.transformation(x)
+            rho = self.problem.preprocessing.dof_to_rho(xt)
+            constraints = []
+            for i in range(len(self.problem.constraints)):
+                constraints.append(self.problem.scaling_constraints[i]
+                                   *self.problem.constraints[i](rho.vector()[:])
+                                   )
+            return np.array(constraints)
 
         def jacobian(self, x):
             #
             # The callback for calculating the Jacobian
             #
             print('evaluate jacobian')
-            x = self.preprocessing.transformation(x)
-            scale2 = 1.0 /(np.dot(np.ones(len(x)), np.ones(len(x))))
-            ds = scale2*self.param["sphere"]*2.*np.asarray(x)
-            ds = self.preprocessing.transformation_chainrule(ds)
-            rho = self.preprocessing.dof_to_rho(x)
-            psiv = TestFunction(rho.function_space())
-            dv = assemble((0.5*psiv*dx))
-            dv = self.preprocessing.dof_to_rho_chainrule(dv, 2)
-            dv = 1.0/self.V*self.param["vol"]*self.preprocessing.transformation_chainrule(dv)
-            return np.concatenate((ds,dv))  # , d_ct_d))
+            xt = self.problem.transformation(x)
+            rho = self.problem.preprocessing.dof_to_rho(xt)
+            dconstraints = []
+
+            # savety feature:
+            if (max(abs(self.problem.constraints[0].get_controls() - rho.vector()[:])) > 1e-12):
+                print('update control')
+                [self.problem.constraints[i](rho.vector()[:]) for i in range(len(self.problem.constraints))]
+
+            for i in range(len(self.problem.constraints)):
+                di = self.problem.constraints[i].derivative()
+                di = self.problem.preprocessing.dof_to_rho_chainrule(di,2)
+                di = self.problem.transformation_chainrule(di)
+                dconstraints.append(self.problem.scaling_constraints[i] *di)
+            return np.asarray(np.concatenate([di for di in dconstraints]))
 
         def intermediate(
                 self,
@@ -207,12 +253,11 @@ class IPOPTSolver(OptimizationSolver):
         max_float = np.finfo(np.double).max
         min_float = np.finfo(np.double).min
 
-        c_vol = self.param["relax_vol"]
-        c_sph = self.param["relax_sphere"]
-        w_v = self.param["vol"]
-        w_s = self.param["sphere"]
-        cl = [w_s*c_sph[0], w_v*c_vol[0]]
-        cu = [w_s*c_sph[1], w_v*c_vol[1]]
+        cl = []
+        cu = []
+        for i in range(len(self.problem.bounds)):
+            cl.append(self.problem.scaling_constraints[i] * self.problem.bounds[i][0])
+            cu.append(self.problem.scaling_constraints[i] * self.problem.bounds[i][1])
 
         ub = np.array([max_float] * len(x0))
         lb = np.array([min_float] * len(x0))
@@ -227,14 +272,18 @@ class IPOPTSolver(OptimizationSolver):
             cu=cu
         )
 
+        # initial point trafo
+        x0 = self.problem.initial_point_trafo(x0)
+
         nlp.addOption('mu_strategy', 'adaptive')
         nlp.addOption('hessian_approximation', 'limited-memory')
         nlp.addOption('limited_memory_update_type', 'bfgs')
         nlp.addOption('limited_memory_max_history', 50)
+        #nlp.addOption('point_perturbation_radius', 0.0)
 
-        nlp.addOption('point_perturbation_radius', 0.0)
-        nlp.addOption('max_iter', self.param["maxiter_IPOPT"])
-        nlp.addOption('tol', 1e-3)
+        nlp.addOption('max_iter', 150)
+        nlp.addOption('tol', 1e-4)
 
         x, info = nlp.solve(x0)
+        x = self.problem.transformation(x)
         return x

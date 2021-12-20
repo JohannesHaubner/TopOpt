@@ -2,9 +2,11 @@ from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
 from scipy import io
+import ufl
 
 from preprocessing import Preprocessing
-from ipopt_solver import IPOPTSolver
+from ipopt_solver import IPOPTSolver, IPOPTProblem
+from pyadjoint.reduced_functional_numpy import ReducedFunctionalNumPy as RFNP
 
 try:
     from pyadjoint import ipopt  # noqa: F401
@@ -95,14 +97,13 @@ def forward(rho):
     return w
 
 def save_control(x0, controls_file, index=-1): #TODO
-    z0 = preprocessing.transformation(x0)
-    rho = preprocessing.dof_to_rho(z0)
+    rho = preprocessing.dof_to_rho(x0)
     rho.rename("density", "density")
     controls_file << rho
     if index +1:
         print('index')
         filename = './Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
-        io.savemat(filename, mdict={'data': z0})
+        io.savemat(filename, mdict={'data': x0})
     pass
 
 if __name__ == "__main__":
@@ -112,11 +113,9 @@ if __name__ == "__main__":
     weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
     preprocessing = Preprocessing(N,delta,B, weighting, sigma)
+    inner_product_matrix = preprocessing.inner_product_matrix
 
-    x0 = preprocessing.initial_point_trafo(x0)
-    save_control(x0, controls_file, 0)
-    y0 = preprocessing.transformation(x0)
-    rho = preprocessing.dof_to_rho(y0)
+    rho = preprocessing.dof_to_rho(x0)
 
     # get reduced objective function: rho --> j(rho)
     set_working_tape(Tape())
@@ -124,7 +123,7 @@ if __name__ == "__main__":
     (u, p) = split(w)
 
     controls = File("./Output/control_iterations_guess" + str(N) +".pvd")
-    allctrls = File("./Output/allcontrols" + str(N) + ".pvd")
+    allctrls = File("./Output/allcontrols_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
 
 
@@ -135,53 +134,55 @@ if __name__ == "__main__":
 
 
     J = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 *dx + ufl.Max(-rho - 1.0, 0.0)**2 *dx)
     m = Control(rho)
-    Jhat = ReducedFunctional(J, m, eval_cb_post=eval_cb)
+    Jhat = [ReducedFunctional(J, m, eval_cb_post=eval_cb), ReducedFunctional(J2, m)]
 
-    # initial optimization problem on "ball"
+    # constraints
+    v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0
+    s = assemble( 1.0/delta*(rho*rho -1.0) *dx)
+    constraints = [RFNP(ReducedFunctional(v,m)), RFNP(ReducedFunctional(s,m))]
+    bounds = [[0.0, 0.0],[-1.0, 0.0]]
 
-    param = {}
-    param["reg"] = 10.   # parameter for regularization of rho in norm equivalent to H^s-norm
-    param["penal"] = 0.  # penalization of L2-violation of (-1,+1)-box-constraint
-    param["vol"] = 1.    # scaling of volume constraint 1/|Omega|*assemble((0.5*(rho+1))*dx)-self.V)
-    param["sphere"] = 1. # scaling of spherical constraint 1/|Omega|*h^2*(np.dot(np.ones(len(x)), np.ones(len(x)))-np.dot(np.ones(len(x)),np.ones(len(x))))
-    param["relax_vol"] = [0., 0.]
-    param["relax_sphere"] = [-1., 0.] #[-1,0]: ||rho||² <= 1, [0,0]: ||rho||² = 1
-    param["obj"] = 1.0
+    # scaling
+    scaling_Jhat = [1.0, 0.0]
+    scaling_constraints = [1.0, 1.0]
 
-    param["maxiter_IPOPT"] = 150
+    # problem
+    reg = 10.0
+    problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg)
 
-    ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
-    #ipopt.test_objective()
-    #exit(0)
+    ipopt = IPOPTSolver(problem)
 
-    #ipopt.test_constraints(option=1)
+    #ipopt.test_objective(len(x0))
+    #ipopt.test_constraints(len(x0), 1, option=1)
+
+
     x0 = ipopt.solve(x0)
 
     save_control(x0, controls_file, 0)
 
-    # check if it worked:
-    #y0 = preprocessing.transformation(x0)
-    #print(1./N * 1./N * (np.dot(np.asarray(y0), np.asarray(y0)) - np.dot(np.ones(len(y0)), np.ones(len(y0)))))
+    weight = [0.01, 0.01, 0.01]
+    eta = [200, 1000, 5000]
 
-    # adapt parameters
-    param["reg"] = 10.
-    param["relax_vol"] = [0., 0.]
-    param["relax_sphere"] = [0., 0.]
-
-    weight = [0.01, 0.01, 0.01] #[0.1, 0.05, 0.025, 0.025]
-    eta = [200, 1000, 5000] #[200, 200, 200, 1000]
+    bounds = [[0.0, 0.0], [0.0, 0.0]]
 
     for j in range(len(eta)):
         # preprocessing class which contains transformation and dof_to_rho-mapping
         print("reinitialize preprocessing...............................")  # can be done better!! no reinit
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
         preprocessing = Preprocessing(N, delta, B, weighting, sigma)
+        inner_product_matrix = preprocessing.inner_product_matrix
 
-        param["penal"] = eta[j]
+        scaling_Jhat = [1.0, eta[j]]
+
         # move x0 onto sphere
-        x0 = preprocessing.move_control_onto_sphere(x0, V, delta)
+        x0 = preprocessing.move_onto_sphere(x0, V, delta)
+
         # solve optimization problem
-        ipopt = IPOPTSolver(preprocessing, k, Jhat, param, 1./N, V)
+        problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing,
+                               inner_product_matrix, reg)
+        ipopt = IPOPTSolver(problem)
+
         x0 = ipopt.solve(x0)
         save_control(x0, controls_file, j+1)
