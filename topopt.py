@@ -163,7 +163,7 @@ if __name__ == "__main__":
     save_control(x0, controls_file, 0)
 
     weight = [0.01, 0.01, 0.01]
-    eta = [200, 1000, 5000]
+    eta = [100, 500, 2500]
 
     bounds = [[0.0, 0.0], [0.0, 0.0]]
 

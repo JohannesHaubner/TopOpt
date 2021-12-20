@@ -38,7 +38,7 @@ class IPOPTProblem:
         self.reg = reg
         self.bounds = bounds
 
-    @ staticmethod
+    @staticmethod
     def sparse_cholesky(A):
         # input matrix A sparse symmetric positive-definite
         n = A.shape[0]
@@ -117,7 +117,8 @@ class IPOPTSolver(OptimizationSolver):
             self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
-    def perform_first_order_check(self, jlist, j0, gradj0, ds, epslist):
+    @staticmethod
+    def perform_first_order_check(jlist, j0, gradj0, ds, epslist):
         # j0: function value at x0
         # gradj0: gradient value at x0
         # epslist: list of decreasing eps-values
@@ -150,6 +151,15 @@ class IPOPTSolver(OptimizationSolver):
     class shape_opt_prob(object):
         def __init__(self, outer):
             self.problem = outer.problem
+            self.x = np.ones(self.problem.trafo_matrix.shape[0])
+            self.y = self.problem.transformation(self.x)
+
+        def trafo(self, x):
+            if (self.x -x > 1e-14).any():
+                print('recompute transformation')
+                self.x = x
+                self.y = self.problem.transformation(x)
+            return self.y
 
         def objective(self, x):
             #
@@ -157,7 +167,7 @@ class IPOPTSolver(OptimizationSolver):
             #
             # x to deformation
             print('evaluate objective')
-            tx = self.problem.transformation(x)
+            tx = self.trafo(x)
             rho = self.problem.preprocessing.dof_to_rho(tx)
             j = 0
             for i in range(len(self.problem.Jhat)):
@@ -171,7 +181,7 @@ class IPOPTSolver(OptimizationSolver):
             #
             # print('evaluate derivative of objective funtion')
             print('evaluate gradient')
-            tx = self.problem.transformation(x)
+            tx = self.trafo(x)
             rho = self.problem.preprocessing.dof_to_rho(tx)
             # savety feature:
             if (max(abs(self.problem.Jhat[0].get_controls() - rho.vector()[:])) > 1e-12):
@@ -189,7 +199,7 @@ class IPOPTSolver(OptimizationSolver):
             #
             # The callback for calculating the constraints
             print('evaluate constraint')
-            xt = self.problem.transformation(x)
+            xt = self.trafo(x)
             rho = self.problem.preprocessing.dof_to_rho(xt)
             constraints = []
             for i in range(len(self.problem.constraints)):
@@ -203,7 +213,7 @@ class IPOPTSolver(OptimizationSolver):
             # The callback for calculating the Jacobian
             #
             print('evaluate jacobian')
-            xt = self.problem.transformation(x)
+            xt = self.trafo(x)
             rho = self.problem.preprocessing.dof_to_rho(xt)
             dconstraints = []
 
@@ -279,7 +289,10 @@ class IPOPTSolver(OptimizationSolver):
         nlp.addOption('hessian_approximation', 'limited-memory')
         nlp.addOption('limited_memory_update_type', 'bfgs')
         nlp.addOption('limited_memory_max_history', 50)
-        #nlp.addOption('point_perturbation_radius', 0.0)
+        nlp.addOption('point_perturbation_radius', 0.0)
+
+        #start close to optimum option
+        nlp.addOption('bound_mult_init_method', 'mu-based')
 
         nlp.addOption('max_iter', 150)
         nlp.addOption('tol', 1e-4)
