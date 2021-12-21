@@ -97,7 +97,7 @@ class IPOPTSolver(OptimizationSolver):
         djx = self.problem_obj.gradient(x0)
         epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
         jlist = [self.problem_obj.objective(x0 + eps * ds) for eps in epslist]
-        self.perform_first_order_check(jlist, j0, djx, ds, epslist)
+        order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
     def test_constraints(self, k, ind, option=0):
@@ -114,7 +114,7 @@ class IPOPTSolver(OptimizationSolver):
             # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
             epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
             jlist = [self.problem_obj.constraints(x0 + eps * ds)[ind] for eps in epslist]
-            self.perform_first_order_check(jlist, j0, djx, ds, epslist)
+            order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
 
     @staticmethod
@@ -145,7 +145,7 @@ class IPOPTSolver(OptimizationSolver):
             print('eps\t', epslist[i], '\t\t check continuity\t', order0[i], '\t\t diff0 \t', diff0[i],
                   '\t\t check derivative \t', order1[i], '\t\t diff1 \t', diff1[i], '\n'),
 
-        return
+        return order1, diff1
 
 
     class shape_opt_prob(object):
@@ -291,10 +291,10 @@ class IPOPTSolver(OptimizationSolver):
         nlp.addOption('limited_memory_max_history', 50)
         nlp.addOption('point_perturbation_radius', 0.0)
 
-        #start close to optimum option
+        # a benefitial option for starts close to solution:
         nlp.addOption('bound_mult_init_method', 'mu-based')
 
-        nlp.addOption('max_iter', 150)
+        nlp.addOption('max_iter', 200)
         nlp.addOption('tol', 1e-4)
 
         x, info = nlp.solve(x0)

@@ -6,6 +6,7 @@ import ufl
 
 from preprocessing import Preprocessing
 from ipopt_solver import IPOPTSolver, IPOPTProblem
+import Hs_regularization as Hs_reg
 from pyadjoint.reduced_functional_numpy import ReducedFunctionalNumPy as RFNP
 
 try:
@@ -109,11 +110,11 @@ def save_control(x0, controls_file, index=-1): #TODO
 if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
 
-    # preprocessing class which contains transformation and dof_to_rho-mapping
+    # preprocessing class which contains dof_to_rho-mapping
     weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
-    preprocessing = Preprocessing(N,delta,B, weighting, sigma)
-    inner_product_matrix = preprocessing.inner_product_matrix
+    preprocessing = Preprocessing(N, B)
+    inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
 
     rho = preprocessing.dof_to_rho(x0)
 
@@ -132,26 +133,27 @@ if __name__ == "__main__":
         controls << rho_viz
         allctrls << rho_viz
 
-
+    # objective function
     J = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 *dx + ufl.Max(-rho - 1.0, 0.0)**2 *dx)
     m = Control(rho)
     Jhat = [ReducedFunctional(J, m, eval_cb_post=eval_cb), ReducedFunctional(J2, m)]
 
     # constraints
-    v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0
-    s = assemble( 1.0/delta*(rho*rho -1.0) *dx)
+    v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
+    s = assemble( 1.0/delta*(rho*rho -1.0) *dx)         # spherical constraint
     constraints = [RFNP(ReducedFunctional(v,m)), RFNP(ReducedFunctional(s,m))]
-    bounds = [[0.0, 0.0],[-1.0, 0.0]]
+    bounds = [[0.0, 0.0],[-1.0, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
-    scaling_Jhat = [1.0, 0.0]
-    scaling_constraints = [1.0, 1.0]
+    scaling_Jhat = [1.0, 0.0]          # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
+    scaling_constraints = [1.0, 1.0]   # scaling of constraints for Ipopt
+
+    reg = 10.0                         # regularization parameter
 
     # problem
-    reg = 10.0
     problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg)
-
     ipopt = IPOPTSolver(problem)
 
     #ipopt.test_objective(len(x0))
@@ -162,17 +164,17 @@ if __name__ == "__main__":
 
     save_control(x0, controls_file, 0)
 
+    # different weights for H_sigma matrix
     weight = [0.01, 0.01, 0.01]
-    eta = [100, 500, 2500]
-
+    # different penalization parameters
+    eta = [50, 250, 1250]
+    # bounds for the constraints
     bounds = [[0.0, 0.0], [0.0, 0.0]]
 
     for j in range(len(eta)):
-        # preprocessing class which contains transformation and dof_to_rho-mapping
-        print("reinitialize preprocessing...............................")  # can be done better!! no reinit
+        # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
-        preprocessing = Preprocessing(N, delta, B, weighting, sigma)
-        inner_product_matrix = preprocessing.inner_product_matrix
+        inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
 
         scaling_Jhat = [1.0, eta[j]]
 

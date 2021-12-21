@@ -1,11 +1,10 @@
 from dolfin import *
 from dolfin_adjoint import *
-import Hs_regularization as reg
 import numpy as np
 
 
 class Preprocessing:
-    def __init__(self, N, delta, FunctionSpaceDG0, weighting, sigma):
+    def __init__(self, N, FunctionSpaceDG0):
         """
         we assume the mesh size to be uniform in x and y direction and
         take advantage of the fact that the numbering of the triangular cells of the rectangular domain is:
@@ -54,8 +53,6 @@ class Preprocessing:
         self.DG0 = FunctionSpaceDG0
         self.k = len(Function(self.DG0).vector()[:])
         self.h = 1./N
-        regularization = reg.AssembleHs(N, delta, sigma)
-        self.inner_product_matrix = regularization.get_matrix(weighting)
 
     def dof_to_rho(self, x):
         """
@@ -82,6 +79,8 @@ class Preprocessing:
         described in Sec. 7.6
         """
         y00 = (2.*V/delta-1.)*np.ones(len(y0))
+        if (y00 - y0).all() < 1e-14:
+            raise ValueError("Only works for non-Constant y0")
         deltay = y0-y00
         ub = np.ones(len(y0))
         int1 = np.dot(ub,ub)
