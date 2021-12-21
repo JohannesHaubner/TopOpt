@@ -13,7 +13,7 @@ def test_Hs_matrix():
     matrix = reg_Hs.get_matrix(1.0)
 
     # check if matrix is symmetric
-    assert np.all(matrix.todense() - matrix.todense()== 0)
+    assert np.all(matrix.transpose().todense() - matrix.todense()== 0)
     # check if positive definite
     assert np.all(np.linalg.eigvals(matrix.todense())> 0)
 

@@ -34,7 +34,7 @@ class IPOPTProblem:
         self.scaling_constraints = scaling_constraints
         self.preprocessing = preprocessing
         self.inner_product_matrix = inner_product_matrix
-        self.trafo_matrix = self.sparse_cholesky(inner_product_matrix).transpose()
+        self.trafo_matrix = self.sparse_cholesky(inner_product_matrix)
         self.reg = reg
         self.bounds = bounds
 
@@ -45,7 +45,7 @@ class IPOPTProblem:
         LU = splu(A, permc_spec='NATURAL', diag_pivot_thresh=0)  # sparse LU decomposition
 
         if (LU.perm_r == np.arange(n)).all() and (LU.U.diagonal() > 0).all():  # check the matrix A is positive definite
-            return LU.L.dot(diags(LU.U.diagonal() ** 0.5))
+            return LU.L.dot(diags(LU.U.diagonal() ** 0.5)).transpose()
         else:
             sys.exit('The matrix is not positive definite')
 
