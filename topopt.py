@@ -156,7 +156,8 @@ if __name__ == "__main__":
     problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg)
     ipopt = IPOPTSolver(problem)
 
-    #ipopt.test_objective(len(x0))
+    ipopt.test_objective(len(x0))
+    exit(0)
     #ipopt.test_constraints(len(x0), 1, option=1)
 
 

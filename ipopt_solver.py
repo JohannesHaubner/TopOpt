@@ -98,7 +98,7 @@ class IPOPTSolver(OptimizationSolver):
         epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5]
         jlist = [self.problem_obj.objective(x0 + eps * ds) for eps in epslist]
         order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
-        return
+        return order1, diff1
 
     def test_constraints(self, k, ind, option=0):
         # check dof_to_deformation with first order derivative check
@@ -115,7 +115,7 @@ class IPOPTSolver(OptimizationSolver):
             epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5]
             jlist = [self.problem_obj.constraints(x0 + eps * ds)[ind] for eps in epslist]
             order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
-        return
+        return order1, diff1
 
     @staticmethod
     def perform_first_order_check(jlist, j0, gradj0, ds, epslist):
