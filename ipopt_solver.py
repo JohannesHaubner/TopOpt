@@ -95,7 +95,7 @@ class IPOPTSolver(OptimizationSolver):
         # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
         j0 = self.problem_obj.objective(x0)
         djx = self.problem_obj.gradient(x0)
-        epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
+        epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5]
         jlist = [self.problem_obj.objective(x0 + eps * ds) for eps in epslist]
         order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
@@ -112,7 +112,7 @@ class IPOPTSolver(OptimizationSolver):
         if option == 1:
             ds = 1.0 * np.ones(xl)
             # ds = interpolate(Expression('0.2*x[0]', degree=1), self.Vd)
-            epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5, 1e-6, 1e-7]
+            epslist = [0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 1e-5]
             jlist = [self.problem_obj.constraints(x0 + eps * ds)[ind] for eps in epslist]
             order1, diff1 = self.perform_first_order_check(jlist, j0, djx, ds, epslist)
         return
@@ -155,7 +155,7 @@ class IPOPTSolver(OptimizationSolver):
             self.y = self.problem.transformation(self.x)
 
         def trafo(self, x):
-            if (self.x -x > 1e-14).any():
+            if (abs(self.x -x) > 1e-14).any():
                 print('recompute transformation')
                 self.x = x
                 self.y = self.problem.transformation(x)
