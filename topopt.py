@@ -7,7 +7,6 @@ import ufl
 from preprocessing import Preprocessing
 from ipopt_solver import IPOPTSolver, IPOPTProblem
 import Hs_regularization as Hs_reg
-from pyadjoint.reduced_functional_numpy import ReducedFunctionalNumPy as RFNP
 
 try:
     from pyadjoint import ipopt  # noqa: F401
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho -1.0) *dx)         # spherical constraint
-    constraints = [RFNP(ReducedFunctional(v,m)), RFNP(ReducedFunctional(s,m))]
+    constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m)]
     bounds = [[0.0, 0.0],[-1.0, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
@@ -156,9 +155,9 @@ if __name__ == "__main__":
     problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg)
     ipopt = IPOPTSolver(problem)
 
-    ipopt.test_objective(len(x0))
+    #ipopt.test_objective(len(x0))
+    ipopt.test_constraints(len(x0), 1, option=1)
     exit(0)
-    #ipopt.test_constraints(len(x0), 1, option=1)
 
 
     x0 = ipopt.solve(x0)

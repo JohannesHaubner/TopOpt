@@ -30,7 +30,7 @@ class IPOPTProblem:
         """
         self.Jhat = [ReducedFunctionalNumPy(Jhat[i]) for i in range(len(Jhat)) ]
         self.scaling_Jhat = scaling_Jhat
-        self.constraints = constraints
+        self.constraints = [ReducedFunctionalNumPy(constraints[i]) for i in range(len(constraints))]
         self.scaling_constraints = scaling_constraints
         self.preprocessing = preprocessing
         self.inner_product_matrix = inner_product_matrix
