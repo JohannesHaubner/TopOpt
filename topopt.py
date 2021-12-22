@@ -96,12 +96,12 @@ def forward(rho):
 
     return w
 
-def save_control(x0, controls_file, index=-1): #TODO
+def save_control(x0, controls_file, index=-1, J = None): #TODO
     rho = preprocessing.dof_to_rho(x0)
     rho.rename("density", "density")
+    print('objective function value J', J(rho))
     controls_file << rho
     if index +1:
-        print('index')
         filename = './Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
         io.savemat(filename, mdict={'data': x0})
     pass
@@ -156,18 +156,16 @@ if __name__ == "__main__":
     ipopt = IPOPTSolver(problem)
 
     #ipopt.test_objective(len(x0))
-    ipopt.test_constraints(len(x0), 1, option=1)
-    exit(0)
-
+    #ipopt.test_constraints(len(x0), 1, option=1)
 
     x0 = ipopt.solve(x0)
 
-    save_control(x0, controls_file, 0)
+    save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
     weight = [0.01, 0.01, 0.01]
     # different penalization parameters
-    eta = [50, 250, 1250]
+    eta = [40, 200, 1000]
     # bounds for the constraints
     bounds = [[0.0, 0.0], [0.0, 0.0]]
 
@@ -187,4 +185,4 @@ if __name__ == "__main__":
         ipopt = IPOPTSolver(problem)
 
         x0 = ipopt.solve(x0)
-        save_control(x0, controls_file, j+1)
+        save_control(x0, controls_file, j+1, J = Jhat[0])

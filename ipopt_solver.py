@@ -295,7 +295,7 @@ class IPOPTSolver(OptimizationSolver):
         nlp.addOption('bound_mult_init_method', 'mu-based')
 
         nlp.addOption('max_iter', 200)
-        nlp.addOption('tol', 1e-4)
+        nlp.addOption('tol', 1e-3)
 
         x, info = nlp.solve(x0)
         x = self.problem.transformation(x)
