@@ -4,6 +4,8 @@ import numpy as np
 from scipy import io
 import ufl
 
+set_log_level(LogLevel.ERROR)
+
 from preprocessing import Preprocessing
 from ipopt_solver import IPOPTSolver, IPOPTProblem
 import Hs_regularization as Hs_reg
@@ -159,6 +161,8 @@ if __name__ == "__main__":
     #ipopt.test_constraints(len(x0), 1, option=1)
 
     x0 = ipopt.solve(x0)
+
+    exit(0)
 
     save_control(x0, controls_file, 0, J = Jhat[0])
 
