@@ -162,8 +162,6 @@ if __name__ == "__main__":
 
     x0 = ipopt.solve(x0)
 
-    exit(0)
-
     save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
