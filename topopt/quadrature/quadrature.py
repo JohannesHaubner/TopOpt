@@ -1,6 +1,8 @@
 from scipy import integrate as integrate
 import numpy as np
 import pickle
+from pathlib import Path
+here = Path(__file__).parent
 
 sigma = 7./32
 
@@ -39,6 +41,15 @@ def int_22(x,y,sigma):
 def int_3(x, y, z, sigma):
     return h3(1,x,y,z, sigma)
 
+def get_weights(sigma):
+    string = str(here) + "/integral_approximations_sigma_" + str(sigma) + ".pkl"
+    try:
+        file = open(string, "rb")
+    except:
+        save_weights(sigma)
+        file = open(string, "rb")
+    return file
+
 def save_weights(sigma):
     sig = sigma
     ints = {}
@@ -57,7 +68,7 @@ def save_weights(sigma):
                                                     [indexes[k][1], indexes[k][1] + 1]],
                                                    args=(sig,))
 
-    string = "./quadrature/integral_approximations_sigma_" + str(sigma) + ".pkl"
+    string = str(here) + "/integral_approximations_sigma_" + str(sigma) + ".pkl"
     file = open(string, "wb")
     pickle.dump(ints, file)
     file.close()

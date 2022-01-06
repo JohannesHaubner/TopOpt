@@ -1,5 +1,6 @@
 import pytest
-from topopt import topopt as preprocessing, topopt as ipopt_solver
+import preprocessing
+import ipopt_solver
 import numpy as np
 
 from dolfin import *

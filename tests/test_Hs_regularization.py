@@ -1,4 +1,4 @@
-from topopt import topopt as Hs_regularization
+import Hs_regularization
 import numpy as np
 
 

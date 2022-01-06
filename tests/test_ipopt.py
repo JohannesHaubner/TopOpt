@@ -1,5 +1,7 @@
 import pytest
-from topopt import topopt as Hs_regularization, topopt as ipopt_solver, topopt as preprocessing
+import preprocessing
+import Hs_regularization
+import ipopt_solver
 import numpy as np
 from test_preprocessing import setting
 from dolfin import *
@@ -41,7 +43,7 @@ def test_objective():
     # initialize IPOPT
     problem = ipopt_solver.IPOPTProblem(Jhat, scaling_Jhat, [None], None, None, preproc, matrix, 2.0)
 
-    # test objective
+    # tests objective
     order1, diff1 = ipopt_solver.IPOPTSolver(problem).test_objective(int(k/2))
 
     assert order1[-1] > 1.8
@@ -78,7 +80,7 @@ def constraints_setting():
 )
 def test_constraints(ind):
     problem, k = constraints_setting()
-    # test constraints
+    # tests constraints
     order1, diff1 = ipopt_solver.IPOPTSolver(problem).test_constraints(int(k/2), ind, option=1)
     assert order1[-1] > 1.8 or diff1[-1] < 1e-12
 

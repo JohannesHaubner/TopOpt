@@ -1,7 +1,7 @@
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
-from quadrature.quadrature import save_weights
+from quadrature.quadrature import get_weights
 import scipy.sparse as sps
 import scipy.sparse as sparse
 import pickle
@@ -34,12 +34,7 @@ class AssembleHs:
 
         # entries of local stencil
         self.sigma = sigma
-        string = "./quadrature/integral_approximations_sigma_" + str(self.sigma) + ".pkl"
-        try:
-            file = open(string, "rb")
-        except:
-            save_weights(sigma)
-            file = open(string, "rb")
+        file = get_weights(sigma)
         self.ints = pickle.load(file)
 
         self.h = 1.0/N

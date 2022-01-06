@@ -40,7 +40,7 @@ mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), in
 
 controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 
-# test if alpha does the correct thing
+# tests if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 #P = FunctionSpace(mesh, P_h)
 #c = interpolate(Expression("-4+8*x[0]", degree=1), P)
