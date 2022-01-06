@@ -1,0 +1,22 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+    container:
+      image: quay.io/dolfinadjoint/pyadjoint:2019.1.0
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: |
+        python3 -m pip install pip --upgrade
+        python3 -m pip install pytest pytest-cov
+    - name: Test with pytest
+      run: |
+        pytest
