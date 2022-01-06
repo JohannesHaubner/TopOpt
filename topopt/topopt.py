@@ -38,7 +38,7 @@ delta = 1.5  # The aspect ratio of the domain, 1 high and \delta wide
 V = 1.0/3 * delta  # want the fluid to occupy 1/3 of the domain
 mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), int(delta*N), N))
 
-controls_file = File('./Output/final_controls_' + str(N) +'.pvd')
+controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 
 # test if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
@@ -104,7 +104,7 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
     print('objective function value J', J(rho))
     controls_file << rho
     if index +1:
-        filename = './Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
+        filename = '../Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
         io.savemat(filename, mdict={'data': x0})
     pass
 
@@ -124,8 +124,8 @@ if __name__ == "__main__":
     w   = forward(rho)
     (u, p) = split(w)
 
-    controls = File("./Output/control_iterations_guess" + str(N) +".pvd")
-    allctrls = File("./Output/allcontrols_" + str(N) + ".pvd")
+    controls = File("../Output/control_iterations_guess" + str(N) +".pvd")
+    allctrls = File("../Output/allcontrols_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
 
 
