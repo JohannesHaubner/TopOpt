@@ -30,6 +30,8 @@ python3 topopt.py
 conda deactivate topopt
 ```
 
+The following fix might be necessary: https://fenicsproject.discourse.group/t/installed-but-looking-for-libsuperlu-dist-so-6/7016/3
+
 ## Running Tests
 
 To run tests, run the following command
