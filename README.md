@@ -1,3 +1,6 @@
+[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=plastic)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
+[![Test topopt](https://github.com/JohannesHaubner/TopOpt/actions/workflows/python-package-conda.yml/badge.svg?style=plastic)](https://github.com/JohannesHaubner/TopOpt/actions/workflows/python-package-conda.yml)
+
 # TopOpt
 
 Code repository for the manuscript
