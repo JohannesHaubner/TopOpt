@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.10.1
+  - python=3.9
   - pip=21.3.1
   - fenics=2019.1.0
   - scipy=1.7.3
