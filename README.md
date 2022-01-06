@@ -7,8 +7,6 @@ Code repository for the manuscript
 The implementation is based on 
 http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html
 
-To run the code run topopt.py
-
 ## Authors
 - [Johannes Haubner](https://www.github.com/JohannesHaubner)
 - [Michael Ulbrich](https://www-m1.ma.tum.de/bin/view/Lehrstuhl/MichaelUlbrich)
@@ -20,6 +18,8 @@ To run the code run topopt.py
 ## Usage/Examples
 
 ```
+conda env create -f environment.yml
+conda activate topopt
 cd topopt
 python3 topopt.py
 ```
