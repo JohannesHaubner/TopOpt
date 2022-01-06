@@ -1,9 +1,6 @@
-import pytest
-import Hs_regularization
+from topopt import topopt as Hs_regularization
 import numpy as np
 
-from dolfin import *
-from dolfin_adjoint import *
 
 def test_Hs_matrix():
     N = 15

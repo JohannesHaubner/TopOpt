@@ -1,9 +1,6 @@
 import pytest
-import preprocessing
-import Hs_regularization
-import ipopt_solver
+from topopt import topopt as Hs_regularization, topopt as ipopt_solver, topopt as preprocessing
 import numpy as np
-import preprocessing
 from test_preprocessing import setting
 from dolfin import *
 from dolfin_adjoint import *
