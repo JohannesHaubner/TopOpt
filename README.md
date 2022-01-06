@@ -20,8 +20,11 @@ http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-to
 ```
 conda env create -f environment.yml
 conda activate topopt
+
 cd topopt
 python3 topopt.py
+
+conda deactivate topopt
 ```
 
 ## Running Tests
