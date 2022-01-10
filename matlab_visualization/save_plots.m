@@ -6,8 +6,8 @@ n = 4 % number of files
 
 global nx ny
 
-nx= 151; 
-ny= 101; 
+nx= 61; 
+ny= 41;
 gentri_nx_ny;
 
 for i= 1:n
