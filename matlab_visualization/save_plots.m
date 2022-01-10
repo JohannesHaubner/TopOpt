@@ -2,12 +2,12 @@ loc = '../TopOpt/Output/matlab_controls_%d_%d.mat';
 saveloc_3d =  '../TopOpt/Output/3d_d_%d=%d';
 saveloc_2d =  '../TopOpt/Output/2d_d_%d=%d';
 
-n = 5 % number of files
+n = 4 % number of files
 
 global nx ny
 
-nx= 61; 
-ny= 41; 
+nx= 151; 
+ny= 101; 
 gentri_nx_ny;
 
 for i= 1:n

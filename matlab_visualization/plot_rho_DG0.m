@@ -1,8 +1,3 @@
-%
-% (C) Johannes Haubner, 2020
-%
-% plot control corresponding to dof x
-
 function plot_rho_DG0(x)
 
 global v t 
