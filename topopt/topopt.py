@@ -154,7 +154,8 @@ if __name__ == "__main__":
     reg = 10.0                         # regularization parameter
 
     # problem
-    problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing, inner_product_matrix, reg)
+    problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds,
+                           preprocessing, inner_product_matrix, reg)
     ipopt = IPOPTSolver(problem)
 
     #ipopt.test_objective(len(x0))
