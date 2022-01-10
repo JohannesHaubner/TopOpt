@@ -14,5 +14,3 @@ def test_Hs_matrix():
     # check if positive definite
     assert np.all(np.linalg.eigvals(matrix.todense())> 0)
 
-if __name__ == "__main__":
-    test_Hs_matrix()

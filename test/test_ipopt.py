@@ -83,10 +83,3 @@ def test_constraints(ind):
     # test constraints
     order1, diff1 = ipopt_solver.IPOPTSolver(problem).test_constraints(int(k/2), ind, option=1)
     assert order1[-1] > 1.8 or diff1[-1] < 1e-12
-
-
-
-if __name__ == "__main__":
-    test_ipopt_cholesky()
-    test_objective()
-    test_constraints(0)

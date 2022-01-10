@@ -90,9 +90,3 @@ def test_move_onto_sphere():
     # check spherical constraint
     rho0 = preproc.dof_to_control(y)
     assert assemble((rho0*rho0 - 1.0)*dx) < 1e-14
-
-
-if __name__ == "__main__":
-    test_chainrule()
-    test_move_onto_sphere_valueerror()
-    test_move_onto_sphere()
