@@ -41,6 +41,7 @@ class IPOPTProblem:
     @staticmethod
     def sparse_cholesky(A):
         # input matrix A sparse symmetric positive-definite
+        # https://gist.github.com/omitakahiro/c49e5168d04438c5b20c921b928f1f5d
         n = A.shape[0]
         LU = splu(A, permc_spec='NATURAL', diag_pivot_thresh=0)  # sparse LU decomposition
 
