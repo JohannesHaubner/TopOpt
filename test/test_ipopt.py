@@ -43,7 +43,7 @@ def test_objective():
     # initialize IPOPT
     problem = ipopt_solver.IPOPTProblem(Jhat, scaling_Jhat, [None], None, None, preproc, matrix, 2.0)
 
-    # tests objective
+    # test objective
     order1, diff1 = ipopt_solver.IPOPTSolver(problem).test_objective(int(k/2))
 
     assert order1[-1] > 1.8
@@ -80,7 +80,7 @@ def constraints_setting():
 )
 def test_constraints(ind):
     problem, k = constraints_setting()
-    # tests constraints
+    # test constraints
     order1, diff1 = ipopt_solver.IPOPTSolver(problem).test_constraints(int(k/2), ind, option=1)
     assert order1[-1] > 1.8 or diff1[-1] < 1e-12
 

@@ -24,7 +24,7 @@ class IPOPTProblem:
         scaling_constraints:    list with same length as constraints that specifies scaling of constraints
         bounds:                 list with same length as constraints, each element being a tuple of a lower and upper
                                 bound
-        preprocessing:          contains dofs_to_control and its chainrule
+        preprocessing:          contains .dofs_to_control and its chainrule .dofs_to_control_chainrule
         inner_product_matrix:   inner product that Ipopt should use, discrete hack via sparse Cholesky
         reg:                    regularization parameter
         """
@@ -168,7 +168,7 @@ class IPOPTSolver(OptimizationSolver):
             # x to deformation
             print('evaluate objective')
             tx = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_rho(tx)
+            rho = self.problem.preprocessing.dof_to_control(tx)
             j = 0
             for i in range(len(self.problem.Jhat)):
                 j += self.problem.scaling_Jhat[i]*self.problem.Jhat[i](rho.vector()[:])
@@ -182,7 +182,7 @@ class IPOPTSolver(OptimizationSolver):
             # print('evaluate derivative of objective funtion')
             print('evaluate gradient')
             tx = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_rho(tx)
+            rho = self.problem.preprocessing.dof_to_control(tx)
             # savety feature:
             if (max(abs(self.problem.Jhat[0].get_controls() - rho.vector()[:])) > 1e-12):
                 print('update control')
@@ -190,7 +190,7 @@ class IPOPTSolver(OptimizationSolver):
             dJf = np.zeros(len(rho.vector()[:]))
             for i in range(len(self.problem.Jhat)):
                 dJf += self.problem.scaling_Jhat[i]*self.problem.Jhat[i].derivative(forget=False, project=False)
-            dJ = self.problem.preprocessing.dof_to_rho_chainrule(dJf, 2)
+            dJ = self.problem.preprocessing.dof_to_control_chainrule(dJf, 2)
             dJ = self.problem.transformation_chainrule(dJ)
             dJ += self.problem.reg * x
             return np.asarray(dJ, dtype=float)
@@ -200,7 +200,7 @@ class IPOPTSolver(OptimizationSolver):
             # The callback for calculating the constraints
             print('evaluate constraint')
             xt = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_rho(xt)
+            rho = self.problem.preprocessing.dof_to_control(xt)
             constraints = []
             for i in range(len(self.problem.constraints)):
                 constraints.append(self.problem.scaling_constraints[i]
@@ -214,7 +214,7 @@ class IPOPTSolver(OptimizationSolver):
             #
             print('evaluate jacobian')
             xt = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_rho(xt)
+            rho = self.problem.preprocessing.dof_to_control(xt)
             dconstraints = []
 
             # savety feature:
@@ -224,7 +224,7 @@ class IPOPTSolver(OptimizationSolver):
 
             for i in range(len(self.problem.constraints)):
                 di = self.problem.constraints[i].derivative()
-                di = self.problem.preprocessing.dof_to_rho_chainrule(di,2)
+                di = self.problem.preprocessing.dof_to_control_chainrule(di,2)
                 di = self.problem.transformation_chainrule(di)
                 dconstraints.append(self.problem.scaling_constraints[i] *di)
             return np.asarray(np.concatenate([di for di in dconstraints]))

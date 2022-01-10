@@ -40,7 +40,7 @@ mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), in
 
 controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 
-# tests if alpha does the correct thing
+# test if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 #P = FunctionSpace(mesh, P_h)
 #c = interpolate(Expression("-4+8*x[0]", degree=1), P)
@@ -99,7 +99,7 @@ def forward(rho):
     return w
 
 def save_control(x0, controls_file, index=-1, J = None): #TODO
-    rho = preprocessing.dof_to_rho(x0)
+    rho = preprocessing.dof_to_control(x0)
     rho.rename("density", "density")
     print('objective function value J', J(rho))
     controls_file << rho
@@ -111,13 +111,13 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
 if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
 
-    # preprocessing class which contains dof_to_rho-mapping
+    # preprocessing class which contains dof_to_control-mapping
     weighting = 1.  # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
     preprocessing = Preprocessing(N, B)
     inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
 
-    rho = preprocessing.dof_to_rho(x0)
+    rho = preprocessing.dof_to_control(x0)
 
     # get reduced objective function: rho --> j(rho)
     set_working_tape(Tape())

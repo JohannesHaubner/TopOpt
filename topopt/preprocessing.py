@@ -54,7 +54,7 @@ class Preprocessing:
         self.k = len(Function(self.DG0).vector()[:])
         self.h = 1./N
 
-    def dof_to_rho(self, x):
+    def dof_to_control(self, x):
         """
         map vector of degrees of freedom to function on triangular mesh
         degrees of freedom live on quadrilateral 2d mesh, whereas rho lives on uniform triangular 2d mesh
@@ -64,9 +64,9 @@ class Preprocessing:
         func.vector()[:] = array
         return func
 
-    def dof_to_rho_chainrule(self, djy, option=1):
+    def dof_to_control_chainrule(self, djy, option=1):
         """
-        chainrule of dof_to_rho
+        chainrule of dof_to_control
         """
         if option ==2:
             return djy[::2]+djy[1::2]

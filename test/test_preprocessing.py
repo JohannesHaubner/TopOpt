@@ -37,21 +37,21 @@ def test_chainrule():
     ds = np.ones(int(k/2))
 
     # objective and derivative
-    b = preproc.dof_to_rho(x0)
+    b = preproc.dof_to_control(x0)
     J = assemble(inner(b, b) * dx)
     Jhat = ReducedFunctional(J, Control(b))
     j0 = Jhat(b)
     dJ = Jhat.derivative()
-    dj = preproc.dof_to_rho_chainrule(dJ)
+    dj = preproc.dof_to_control_chainrule(dJ)
 
     # perturbed objective
     epslist = [1.0, 0.1, 0.01, 0.001, 0.0001]
     xi = [x0 + epslist[i]*ds for i in range(len(epslist))]
-    bi = [preproc.dof_to_rho(x) for x in xi]
+    bi = [preproc.dof_to_control(x) for x in xi]
     jlist = [Jhat(b) for b in bi]
 
     # first order check
-    print('First order check for preprocessing.dof_to_rho................................')
+    print('First order check for preprocessing.dof_to_control................................')
     order1, diff1 = ipopt_solver.IPOPTSolver.perform_first_order_check(jlist, j0, dj, ds, epslist)
 
     assert order1[-1] > 1.8
@@ -88,7 +88,7 @@ def test_move_onto_sphere():
     y = preproc.move_onto_sphere(y0, V, delta)
 
     # check spherical constraint
-    rho0 = preproc.dof_to_rho(y)
+    rho0 = preproc.dof_to_control(y)
     assert assemble((rho0*rho0 - 1.0)*dx) < 1e-14
 
 

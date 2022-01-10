@@ -255,25 +255,3 @@ class AssembleHs:
         bdof['n'] = [1, nx-2, nx, 2*nx-1, ny*nx-2, (ny-1)*nx +1, (ny-2)*nx, (ny-1)*nx-1]
         bdof['o'] = [0, nx-1, (ny-1)*nx, ny*nx-1]
         return bdof
-
-"""
-from dof_to_rho import dof_to_rho
-
-    def test_boundary_classification(self, DG0FunctionSpace):
-        DofToRho = dof_to_rho(DG0FunctionSpace)
-        k = len(Function(DG0FunctionSpace).vector()[:])
-
-        xi = np.ones(int(k / 2))
-        bdof = self.__boundary_classification()
-
-        i = 1
-        for s in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o']:
-            i += 1
-            xi[bdof[s]] = i * np.ones(len(bdof[s]))
-
-        xif = DofToRho.eval(xi)
-
-        file = File('./Output/xif.pvd')
-        file << xif
-        pass
-"""
