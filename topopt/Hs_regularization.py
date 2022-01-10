@@ -109,6 +109,7 @@ class AssembleHs:
     @staticmethod
     def with_coo(x, y):
         # add two csc matrices
+        # https://stackoverflow.com/questions/37231163/adding-two-csc-sparse-matrices-of-different-shapes-in-python
         x = x.tocoo()
         y = y.tocoo()
         d = np.concatenate((x.data, y.data))
