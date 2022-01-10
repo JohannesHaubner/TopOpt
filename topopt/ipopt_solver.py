@@ -82,7 +82,7 @@ class IPOPTSolver(OptimizationSolver):
         print('Initialization of IPOPTSolver finished')
 
     def create_problem_obj(self, outer):
-        return IPOPTSolver.shape_opt_prob(outer)
+        return IPOPTSolver.opt_prob(outer)
 
     def test_objective(self, k):
         # check dof_to_deformation with first order derivative check
@@ -148,7 +148,7 @@ class IPOPTSolver(OptimizationSolver):
         return order1, diff1
 
 
-    class shape_opt_prob(object):
+    class opt_prob(object):
         def __init__(self, outer):
             self.problem = outer.problem
             self.x = np.ones(self.problem.trafo_matrix.shape[0])
@@ -264,7 +264,7 @@ class IPOPTSolver(OptimizationSolver):
         ub = np.array([max_float] * len(x0))
         lb = np.array([min_float] * len(x0))
 
-        nlp = ipopt.Problem(
+        nlp = cyipopt.Problem(
             n=len(x0),
             m=len(cl),
             problem_obj=self.problem_obj,
