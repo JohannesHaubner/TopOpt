@@ -49,7 +49,7 @@ class AssembleHs:
         """
         returns L^2-matrix + weighting*H^s-matrix
         """
-        return self.with_coo(self.L2_glob_matrix, weighting*self.Hs_glob_matrix) #self.L2_glob_matrix + weighting * self.Hs_glob_matrix
+        return self.with_coo(self.L2_glob_matrix, weighting*self.Hs_glob_matrix)
 
     def __get_entries_of_local_stencils(self):
         """
@@ -238,13 +238,17 @@ class AssembleHs:
 
         bdof = {}
         bdof['b'] = np.concatenate([np.linspace(3*nx+4, 4*nx-5, nx-8), np.linspace((ny-4)*nx+4, (ny-3)*nx-5, nx-8),
-                                    np.linspace(4, ny-5, ny-8)*nx +3, np.linspace(5,ny-4,ny-8)*nx-4]).astype(int).tolist()
+                                    np.linspace(4, ny-5, ny-8)*nx +3, np.linspace(5,ny-4,ny-8)*nx-4])\
+            .astype(int).tolist()
         bdof['d'] = np.concatenate([np.linspace(2*nx+4, 3*nx-5, nx-8), np.linspace((ny-3)*nx+4, (ny-2)*nx-5, nx-8),
-                                    np.linspace(4, ny-5, ny-8)*nx +2, np.linspace(5, ny-4, ny-8)*nx-3]).astype(int).tolist()
+                                    np.linspace(4, ny-5, ny-8)*nx +2, np.linspace(5, ny-4, ny-8)*nx-3])\
+            .astype(int).tolist()
         bdof['g'] = np.concatenate([np.linspace(nx+4, 2*nx-5,nx-8), np.linspace((ny-2)*nx+4, (ny-1)*nx-5, nx-8),
-                                    np.linspace(4,ny-5,ny-8)*nx+1, np.linspace(5, ny-4,ny-8)*nx-2]).astype(int).tolist()
+                                    np.linspace(4,ny-5,ny-8)*nx+1, np.linspace(5, ny-4,ny-8)*nx-2])\
+            .astype(int).tolist()
         bdof['k'] = np.concatenate([np.linspace(4,nx-5, nx-8), np.linspace((ny-1)*nx+4, ny*nx-5, nx-8),
-                                    np.linspace(4, ny-5, ny-8)*nx, np.linspace(5,ny-4,ny-8)*nx -1],axis =0).astype(int).tolist()
+                                    np.linspace(4, ny-5, ny-8)*nx, np.linspace(5,ny-4,ny-8)*nx -1],axis =0)\
+            .astype(int).tolist()
         bdof['c'] = [3*nx+3, 4*nx-4, (ny-4)*nx+3, (ny-3)*nx-4]
         bdof['e'] = [2*nx+3, 3*nx-4, (ny-3)*nx+3, (ny-2)*nx-4, 3*nx+2, 4*nx-3, (ny-4)*nx+2, (ny-3)*nx-3]
         bdof['f'] = [2*nx+2, 3*nx-3, (ny-3)*nx+2, (ny-2)*nx-3]
