@@ -66,7 +66,7 @@ def test_move_onto_sphere_valueerror():
     y00 = (2. * V / delta - 1.) * np.ones(int(k/2))
 
     with pytest.raises(ValueError):
-        preprocessing.Preprocessing(N,B).move_onto_sphere(y00, V, delta)
+        preprocessing.Preprocessing(N, B).move_onto_sphere(y00, V, delta)
 
 def test_move_onto_sphere():
     # setting
@@ -74,7 +74,7 @@ def test_move_onto_sphere():
     mesh, B, k = setting(N)
     delta = 1.0
     V = 0.33
-    preproc = preprocessing.Preprocessing(N,B)
+    preproc = preprocessing.Preprocessing(N, B)
 
     # projection of 0
     y00 = (2. * V / delta - 1.) * np.ones(int(k/2))
