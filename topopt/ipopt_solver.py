@@ -78,13 +78,13 @@ class IPOPTSolver(OptimizationSolver):
             print("You need to install cyipopt. (It is recommended to install IPOPT with HSL support!)")
             raise
         self.problem = problem
-        self.problem_obj = self.create_problem_obj(self)
+        self.problem_obj = self.create_problem_obj(problem)
 
 
         print('Initialization of IPOPTSolver finished')
 
-    def create_problem_obj(self, outer):
-        return IPOPTSolver.opt_prob(outer)
+    def create_problem_obj(self, problem):
+        return IPOPTSolver.opt_prob(problem)
 
     def test_objective(self, k):
         # check dof_to_deformation with first order derivative check
@@ -151,8 +151,8 @@ class IPOPTSolver(OptimizationSolver):
 
 
     class opt_prob(object):
-        def __init__(self, outer):
-            self.problem = outer.problem
+        def __init__(self, problem):
+            self.problem = problem
             self.x = np.ones(self.problem.trafo_matrix.shape[0])
             self.y = self.problem.transformation(self.x)
 
