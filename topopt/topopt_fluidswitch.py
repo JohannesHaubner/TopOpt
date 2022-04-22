@@ -200,13 +200,13 @@ if __name__ == "__main__":
     # different weights for H_sigma matrix
     weight = [0.1, 0.1, 0.1]
     # different penalization parameters
-    eta = [40, 200, 1000]
+    eta = [0.1, 1, 10, 100]
 
     for j in range(len(eta)):
         # bounds for the constraints
         bounds = [[0.0, 0.0], [0.0, 0.0], [-999999, 0.0]]
 
-        #reg = 1e-3 TODO test
+        reg = 1e-6
 
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
