@@ -6,7 +6,8 @@ import backend
 
 from pyadjoint.optimization.optimization_solver import OptimizationSolver
 from pyadjoint.reduced_functional_numpy import ReducedFunctionalNumPy
-from scipy.sparse.linalg import spsolve, splu
+from scikits.umfpack import spsolve
+from scipy.sparse.linalg import splu
 from scipy.sparse import diags
 
 
