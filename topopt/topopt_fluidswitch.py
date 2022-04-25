@@ -170,7 +170,8 @@ if __name__ == "__main__":
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 *dx + ufl.Max(-rho - 1.0, 0.0)**2 *dx)
     m = Control(rho)
-    Jhat = [ReducedFunctional(J, m, eval_cb_post=eval_cb), ReducedFunctional(J2, m)]
+    #
+    Js = [J, J2]
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
@@ -180,13 +181,19 @@ if __name__ == "__main__":
     bounds = [[0.0, 0.0],[-1.0, 0.0],[-999999, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
-    scaling_Jhat = [1.0, 0.0]          # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
-    scaling_constraints = [1.0, 1.0, 1.0]   # scaling of constraints for Ipopt
+    scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
+    scaling_constraints = [1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
+
+    # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
+    J_ = 0
+    for i in range(len(Js)):
+        J_ += Js[i] * scaling_Js[i]
+    Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
     reg = 1e-6                       # regularization parameter
 
     # problem
-    problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds,
+    problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
                            preprocessing, inner_product_matrix, reg)
     ipopt = IPOPTSolver(problem)
 
@@ -212,13 +219,17 @@ if __name__ == "__main__":
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
         inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
 
-        scaling_Jhat = [1.0, eta[j]]
+        # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
+        J_ = 0
+        for i in range(len(Js)):
+            J_ += Js[i] * scaling_Js[i]
+        Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
         # move x0 onto sphere
         x0 = preprocessing.move_onto_sphere(x0, V, delta)
 
         # solve optimization problem
-        problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing,
+        problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds, preprocessing,
                                inner_product_matrix, reg)
         ipopt = IPOPTSolver(problem)
 
