@@ -205,7 +205,7 @@ if __name__ == "__main__":
     save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
-    weight = [0.1, 0.1, 0.1]
+    weight = [0.1, 0.1, 0.1, 0.1]
     # different penalization parameters
     eta = [0.1, 1, 10, 100]
 
@@ -218,6 +218,8 @@ if __name__ == "__main__":
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
         inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
+
+        scaling_Js = [1.0, eta[j]]
 
         # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
         J_ = 0
