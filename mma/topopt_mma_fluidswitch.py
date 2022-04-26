@@ -3,8 +3,6 @@ from dolfin_adjoint import *
 from pyadjoint.enlisting import Enlist
 import numpy as np
 from scipy import io
-from statistics import mean
-from block import block_mat
 
 import ufl
 

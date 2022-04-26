@@ -207,7 +207,7 @@ if __name__ == "__main__":
     # different weights for H_sigma matrix
     weight = [0.1, 0.1, 0.1, 0.1]
     # different penalization parameters
-    eta = [0.1, 1, 10, 100]
+    eta = [0.4, 2, 10]
 
     for j in range(len(eta)):
         # bounds for the constraints
