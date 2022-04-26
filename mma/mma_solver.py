@@ -68,17 +68,18 @@ class MMAProblem:
                     dfidx = self.constraints[i].derivative().reshape((len(x0), 1)).T
                     dfdx = np.concatenate((dfdx, dfidx))
         if not no_grad:
-            return f0val, df0dx, fval, dfdx
+            return f0val, df0dx, np.asarray(fval), dfdx
         else:
-            return np.asarray([[f0val]]), fval
+            return np.asarray([[f0val]]), np.asarray(fval)
 
 
 class MMASolver(OptimizationSolver):
     def __init__(self, problem, parameters=None):
         self.problem = problem
         self.maxoutit = 100
+        self.kkttol = 1e-3
         #self.lin_const = False
-        self.globalize = True
+        self.globalize = False
 
     def solve(self, rho0):
         """
@@ -114,7 +115,7 @@ class MMASolver(OptimizationSolver):
         a = zerom.copy()
         outeriter = 0
         maxoutit = self.maxoutit
-        kkttol = 0
+        kkttol = self.kkttol
         # Calculate function values and gradients of the objective and constraints functions
         if outeriter == 0:
             f0val, df0dx, fval, dfdx = self.problem(xval.T[0])
