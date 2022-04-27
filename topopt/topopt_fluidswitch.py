@@ -138,7 +138,7 @@ if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
 
     # preprocessing class which contains dof_to_control-mapping
-    weighting = 0.1  # consider L2-mass-matrix + weighting * Hs-matrix
+    weighting = 0.1 # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
     preprocessing = Preprocessing(N, B)
     inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
@@ -173,12 +173,14 @@ if __name__ == "__main__":
     #
     Js = [J, J2]
 
+    Jeval = ReducedFunctional(J, m)
+
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
-    s = assemble( 1.0/delta*(rho*rho - 1.0) *dx)         # spherical constraint
+    s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
     g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (10 * ref) - 1.0
     constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m), ReducedFunctional(g,m)]
-    bounds = [[0.0, 0.0],[-1.0, 0.0],[-999999, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
+    bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
     scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
@@ -205,13 +207,13 @@ if __name__ == "__main__":
     save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
-    weight = [0.1, 0.1, 0.1, 0.1]
+    weight = [0.01, 0.01, 0.001]
     # different penalization parameters
     eta = [0.4, 2, 10]
 
     for j in range(len(eta)):
         # bounds for the constraints
-        bounds = [[0.0, 0.0], [0.0, 0.0], [-999999, 0.0]]
+        bounds = [[-1e6, 0.0], [0.0, 0.0], [-1e6, 0.0]]
 
         reg = 1e-6
 
@@ -236,4 +238,4 @@ if __name__ == "__main__":
         ipopt = IPOPTSolver(problem)
 
         x0 = ipopt.solve(x0)
-        save_control(x0, controls_file, j+1, J = Jhat[0])
+        save_control(x0, controls_file, j+1, J = Jeval)
