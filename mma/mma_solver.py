@@ -78,6 +78,10 @@ class MMASolver(OptimizationSolver):
         self.problem = problem
         self.maxoutit = 100
         self.kkttol = 1e-3
+        # Logger
+        path = os.path.dirname(os.path.realpath(__file__))
+        file = os.path.join(path, "MMA.log")
+        self.logger = self.setup_logger(file)
         #self.lin_const = False
         self.globalize = False
 
@@ -86,10 +90,7 @@ class MMASolver(OptimizationSolver):
         code snippet taken from
         https://github.com/arjendeetman/GCMMA-MMA-Python/blob/master/Code/MMA_TOY2.py and /GCMMA_BEAM.py
         """
-        # Logger
-        path = os.path.dirname(os.path.realpath(__file__))
-        file = os.path.join(path, "MMA.log")
-        logger = self.setup_logger(file)
+        logger = self.logger
         logger.info("Started\n")
         # Set numpy print options
         np.set_printoptions(precision=4, formatter={'float': '{: 0.4f}'.format})

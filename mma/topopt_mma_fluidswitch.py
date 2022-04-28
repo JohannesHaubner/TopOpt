@@ -84,13 +84,13 @@ ds = Measure("dS", domain=mesh, subdomain_data=marker)
 #c.vector()[:] = vh[:]
 #testfile << c
 
-A = FunctionSpace(mesh, "CG", 1)        # control function space
+A = FunctionSpace(mesh, "DG", 0)        # control function space
 
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "CG", 1)
+B = FunctionSpace(mesh, "DG", 0)
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     uref = forward(Constant(1.0),q)
     ref = assemble(0.5 * mu * inner(grad(uref), grad(uref)) * dx)
 
-    for q in [0.001, 0.01, 0.1, 1]:
+    for q in [0.01, 0.1, 1, 10, 100]: # [0.001, 0.01, 0.1, 1, 10, 100]:
         set_working_tape(Tape())
 
         rho = Function(B)
@@ -197,5 +197,5 @@ if __name__ == "__main__":
 
         x0 = mma.solve(rho.vector()[:]).T[0]
 
-        save_control(x0, controls_file, 0, J = Jhat[0])
+        #save_control(x0, controls_file, 0, J = Jhat[0])
 
