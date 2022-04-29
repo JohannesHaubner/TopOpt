@@ -84,13 +84,11 @@ ds = Measure("dS", domain=mesh, subdomain_data=marker)
 #c.vector()[:] = vh[:]
 #testfile << c
 
-A = FunctionSpace(mesh, "DG", 0)        # control function space
-
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "DG", 0)
+B = FunctionSpace(mesh, "CG", 1)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
@@ -147,7 +145,7 @@ if __name__ == "__main__":
 
     controls = File("../Output/control_iterations_guess" + str(N) + ".pvd")
     allctrls = File("../Output/allcontrols_" + str(N) + ".pvd")
-    rho_viz = Function(A, name="ControlVisualisation")
+    rho_viz = Function(B, name="ControlVisualisation")
 
 
     def eval_cb(j, rho):

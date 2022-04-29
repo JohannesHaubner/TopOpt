@@ -24,8 +24,7 @@ conda deactivate topopt
 
 The following fix might be necessary: https://fenicsproject.discourse.group/t/installed-but-looking-for-libsuperlu-dist-so-6/7016/3
 
-For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html). The numerical results presented in the manuscript use 
-an installation of IPOPT that is linked against HSL.
+For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html).
 
 ## Running Tests
 

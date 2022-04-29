@@ -50,13 +50,11 @@ controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 #c.vector()[:] = vh[:]
 #testfile << c
 
-A = FunctionSpace(mesh, "CG", 1)        # control function space
-
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "DG", 0)
+B = FunctionSpace(mesh, "DG", 0)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
@@ -126,7 +124,7 @@ if __name__ == "__main__":
 
     controls = File("../Output/control_iterations_guess" + str(N) +".pvd")
     allctrls = File("../Output/allcontrols_" + str(N) + ".pvd")
-    rho_viz = Function(A, name="ControlVisualisation")
+    rho_viz = Function(B, name="ControlVisualisation")
 
 
     def eval_cb(j, rho):
@@ -142,10 +140,12 @@ if __name__ == "__main__":
     Js = [J, J2]
     m = Control(rho)
 
+    Jeval = ReducedFunctional(J, m)
+
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
-    s = assemble( 1.0/delta*(rho*rho -1.0) *dx)         # spherical constraint
-    constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m)]
+    s = assemble( 1.0/delta*(rho*rho -1.0) * dx)         # spherical constraint
+    constraints = [ReducedFunctional(v, m), ReducedFunctional(s, m)]
     bounds = [[0.0, 0.0],[-1.0, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
@@ -170,14 +170,14 @@ if __name__ == "__main__":
 
     x0 = ipopt.solve(x0)
 
-    save_control(x0, controls_file, 0, J = Jhat[0])
+    save_control(x0, controls_file, 0, J = Jeval)
 
     # different weights for H_sigma matrix
-    weight = [0.01, 0.01, 0.01]
+    weight = [0.01, 0.01, 0.001]
     # different penalization parameters
     eta = [40, 200, 1000]
     # bounds for the constraints
-    bounds = [[0.0, 0.0], [0.0, 0.0]]
+    bounds = [[-1e6, 0.0], [0.0, 0.0]]
 
     for j in range(len(eta)):
         # update inner product
@@ -198,9 +198,9 @@ if __name__ == "__main__":
         x0 = preprocessing.move_onto_sphere(x0, V, delta)
 
         # solve optimization problem
-        problem = IPOPTProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, bounds, preprocessing,
+        problem = IPOPTProblem(Jhat, scaling_Js, constraints, scaling_constraints, bounds, preprocessing,
                                inner_product_matrix, reg)
         ipopt = IPOPTSolver(problem)
 
         x0 = ipopt.solve(x0)
-        save_control(x0, controls_file, j+1, J = Jhat[0])
+        save_control(x0, controls_file, j+1, J = Jeval)
