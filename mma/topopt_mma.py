@@ -114,20 +114,6 @@ def save_control(x0, controls_file, index=-1, J = None):
     rho.rename("density", "density")
     print('objective function value J', J(rho))
     controls_file << rho
-    breakpoint()
-    # get reduced objective function: rho --> j(rho)
-    q = 0.01
-    w = forward(rho, q)
-    (u, p) = split(w)
-    up = project(u, VectorFunctionSpace(mesh, "CG", 2))
-    pp = project(p, FunctionSpace(mesh, "CG", 1))
-    controls_file << up
-    controls_file << pp
-    controls_file << marker
-
-    # objective function
-    J = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
-    breakpoint()
     if index + 1:
         filename = '../Output/matlab_controls_' + str(N) + '_' + str(index + 1) + '.mat'
         io.savemat(filename, mdict={'data': x0})

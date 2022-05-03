@@ -23,9 +23,7 @@ except ImportError:
 parameters["std_out_all_processes"] = False
 
 mu = Constant(1.0)                   # viscosity
-alphaunderbar = 2.5 * mu / (100**2)  # parameter for \alpha
 alphabar = 2.5 * mu / (0.001**2)      # parameter for \alpha
-q = Constant(0.01) # q value that controls difficulty/discrete-valuedness of solution
 
 def alpha(rho):
     """Inverse permeability as a function of rho, equation (40)"""
