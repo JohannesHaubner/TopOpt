@@ -43,16 +43,6 @@ mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), in
 
 controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 
-# test if alpha does the correct thing
-#P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
-#P = FunctionSpace(mesh, P_h)g
-#c = interpolate(Expression("-4+8*x[0]", degree=1), P)
-#testfile = File('./Output/c.pvd')
-#v = TestFunction(P)
-#vh = assemble(alpha(c)*v*dx)
-#c.vector()[:] = vh[:]
-#testfile << c
-
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
@@ -61,10 +51,6 @@ B = FunctionSpace(mesh, "CG", 1)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
-
-#file = File("./Output/b_ved.pvd")
-#file << b
-
 
 # Define the boundary condition on velocity
 
@@ -90,6 +76,7 @@ class InflowOutflow(UserExpression):
 class PressureB(SubDomain):
     def inside(self, x, on_boundary):
         return near(x[0], (0.0)) and near(x[1], (0.0))
+
 pressureB = PressureB()
 
 
@@ -150,6 +137,7 @@ if __name__ == "__main__":
 
         m = Control(rho)
         Jhat = [ReducedFunctional(J, m, eval_cb_post=eval_cb)]
+        # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required 
 
         # constraints
         v = 1.0 /V * assemble(rho * dx) - 1.0  # volume constraint

@@ -31,22 +31,12 @@ def alpha(rho):
                                                      alphabar*(-1.0/16*rho**4 + 3.0/8*rho**2 -0.5*rho + 3.0/16),
                                                      -1.0*alphabar*rho))
 
-N = 40
+N = 100
 delta = 1.5  # The aspect ratio of the domain, 1 high and \delta wide
 V = 1.0/3 * delta  # want the fluid to occupy 1/3 of the domain
 mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), int(delta*N), N))
 
 controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
-
-# test if alpha does the correct thing
-#P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
-#P = FunctionSpace(mesh, P_h)
-#c = interpolate(Expression("-4+8*x[0]", degree=1), P)
-#testfile = File('./Output/c.pvd')
-#v = TestFunction(P)
-#vh = assemble(alpha(c)*v*dx)
-#c.vector()[:] = vh[:]
-#testfile << c
 
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
@@ -56,10 +46,6 @@ B = FunctionSpace(mesh, "DG", 0)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
-
-#file = File("./Output/b_ved.pvd")
-#file << b
-
 
 # Define the boundary condition on velocity
 
@@ -147,6 +133,7 @@ if __name__ == "__main__":
     m = Control(rho)
 
     Jeval = ReducedFunctional(J, m)
+    # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required (see Appendix A.4)
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
@@ -163,6 +150,7 @@ if __name__ == "__main__":
     for i in range(len(Js)):
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
+    # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required (see Appendix A.4)
 
     reg = 10.0                         # regularization parameter
 
