@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
         m = Control(rho)
         Jhat = [ReducedFunctional(J, m, eval_cb_post=eval_cb)]
-        # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required 
+        # Note: the evaluation of the gradient can be speed up since the adjoint solve requires no pde solve
 
         # constraints
         v = 1.0 /V * assemble(rho * dx) - 1.0  # volume constraint

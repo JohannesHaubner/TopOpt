@@ -133,7 +133,8 @@ if __name__ == "__main__":
     m = Control(rho)
 
     Jeval = ReducedFunctional(J, m)
-    # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required (see Appendix A.4)
+    # Note: the evaluation of the gradient can be speed up since the adjoint solve requires no pde solve
+    # (see Appendix A.4)
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
@@ -150,7 +151,8 @@ if __name__ == "__main__":
     for i in range(len(Js)):
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
-    # Note: the evaluation of the gradient can be speed up since the adjoint solve is not required (see Appendix A.4)
+    # Note: the evaluation of the gradient can be speed up since the adjoint solve requires no pde solve
+    # (see Appendix A.4)
 
     reg = 10.0                         # regularization parameter
 
