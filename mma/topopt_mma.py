@@ -28,7 +28,7 @@ except ImportError:
 parameters["std_out_all_processes"] = False
 
 mu = Constant(1.0)                   # viscosity
-alphaunderbar = 2.5 * mu / (100**2)  # parameter for \alpha
+alphaunderbar = 0                    # parameter for \alpha
 alphabar = 2.5 * mu / (0.01**2)      # parameter for \alpha
 q = Constant(0.01) # q value that controls difficulty/discrete-valuedness of solution
 
@@ -53,12 +53,11 @@ controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 #c.vector()[:] = vh[:]
 #testfile << c
 
-
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "CG", 1)          # control function space
+B = FunctionSpace(mesh, "DG", 0)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
@@ -87,15 +86,24 @@ class InflowOutflow(UserExpression):
     def value_shape(self):
         return (2,)
 
+# pressure BC
+class PressureB(SubDomain):
+    def inside(self, x, on_boundary):
+        return near(x[0], (0.0)) and near(x[1], (0.0))
+pressureB = PressureB()
+
+
 def forward(rho, q_):
     """Solve the forward problem for a given fluid distribution rho(x)."""
-    w = Function(W)
+    #w = Function(W)
+    w = interpolate(Constant((0., 0., 0.)), W)
     (u, p) = TrialFunctions(W)
     (v, q) = TestFunctions(W)
 
     F = (alpha(rho, q_) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
          inner(grad(p), v) * dx  + inner(div(u), q) * dx)
-    bc = DirichletBC(W.sub(0), InflowOutflow(degree=2), "on_boundary")
+    bc = [DirichletBC(W.sub(0), InflowOutflow(degree=2), "on_boundary"),
+          DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')]
     solve(lhs(F) == rhs(F), w, bcs=bc)
 
     return w
@@ -106,6 +114,20 @@ def save_control(x0, controls_file, index=-1, J = None):
     rho.rename("density", "density")
     print('objective function value J', J(rho))
     controls_file << rho
+    breakpoint()
+    # get reduced objective function: rho --> j(rho)
+    q = 0.01
+    w = forward(rho, q)
+    (u, p) = split(w)
+    up = project(u, VectorFunctionSpace(mesh, "CG", 2))
+    pp = project(p, FunctionSpace(mesh, "CG", 1))
+    controls_file << up
+    controls_file << pp
+    controls_file << marker
+
+    # objective function
+    J = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    breakpoint()
     if index + 1:
         filename = '../Output/matlab_controls_' + str(N) + '_' + str(index + 1) + '.mat'
         io.savemat(filename, mdict={'data': x0})
@@ -128,7 +150,7 @@ if __name__ == "__main__":
         controls << rho_viz
         allctrls << rho_viz
 
-    for q in [0.01, 0.1, 1, 10]:
+    for q in [0.01, 0.1]:
         set_working_tape(Tape())
 
         rho = Function(B)
@@ -158,7 +180,12 @@ if __name__ == "__main__":
 
         # problem
         problem = MMAProblem(Jhat, scaling_Jhat, constraints, scaling_constraints, [low_bound, up_bound])
-        mma = MMASolver(problem)
+        parameters = {}
+        if q == 0.01:
+            parameters["maxit"] = 30
+        elif q == 0.1:
+            parameters["maxit"] = 300
+        mma = MMASolver(problem, parameters)
 
         #ipopt.test_objective(len(x0))
         #ipopt.test_constraints(len(x0), 1, option=1)

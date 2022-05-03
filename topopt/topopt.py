@@ -24,7 +24,7 @@ parameters["std_out_all_processes"] = False
 
 mu = Constant(1.0)                   # viscosity
 alphaunderbar = 2.5 * mu / (100**2)  # parameter for \alpha
-alphabar = 2.5 * mu / (0.01**2)      # parameter for \alpha
+alphabar = 2.5 * mu / (0.001**2)      # parameter for \alpha
 q = Constant(0.01) # q value that controls difficulty/discrete-valuedness of solution
 
 def alpha(rho):
@@ -83,6 +83,13 @@ class InflowOutflow(UserExpression):
     def value_shape(self):
         return (2,)
 
+# pressure BC
+class PressureB(SubDomain):
+    def inside(self, x, on_boundary):
+        return near(x[0], (0.0)) and near(x[1], (0.0))
+
+pressureB = PressureB()
+
 def forward(rho):
     """Solve the forward problem for a given fluid distribution rho(x)."""
     w = Function(W)
@@ -91,7 +98,8 @@ def forward(rho):
 
     F = (alpha(rho) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
          inner(grad(p), v) * dx  + inner(div(u), q) * dx)
-    bc = DirichletBC(W.sub(0), InflowOutflow(degree=2), "on_boundary")
+    bc = [DirichletBC(W.sub(0), InflowOutflow(degree=2), "on_boundary"),
+          DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')]
     solve(lhs(F) == rhs(F), w, bcs=bc)
 
     return w

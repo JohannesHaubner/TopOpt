@@ -77,12 +77,14 @@ class MMASolver(OptimizationSolver):
     def __init__(self, problem, parameters=None):
         self.problem = problem
         self.maxoutit = 100
+        if parameters != None:
+            self.maxoutit = parameters["maxit"]
         self.kkttol = 1e-3
         # Logger
         path = os.path.dirname(os.path.realpath(__file__))
         file = os.path.join(path, "MMA.log")
         self.logger = self.setup_logger(file)
-        #self.lin_const = False
+        self.lin_const = False
         self.globalize = False
 
     def solve(self, rho0):
