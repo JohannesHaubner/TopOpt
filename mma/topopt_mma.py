@@ -45,7 +45,7 @@ controls_file = File('../Output/final_controls_' + str(N) +'.pvd')
 
 # test if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
-#P = FunctionSpace(mesh, P_h)
+#P = FunctionSpace(mesh, P_h)g
 #c = interpolate(Expression("-4+8*x[0]", degree=1), P)
 #testfile = File('./Output/c.pvd')
 #v = TestFunction(P)
@@ -57,7 +57,7 @@ U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "DG", 0)          # control function space
+B = FunctionSpace(mesh, "CG", 1)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
