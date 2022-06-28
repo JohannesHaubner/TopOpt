@@ -230,14 +230,14 @@ if __name__ == "__main__":
     #J = 1e-2*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good
     #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     tau = Constant(0.)
-    J = assemble((rho + tau) * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
+    J = assemble( tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
-    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (10 * ref) - 1.0
+    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (2 * ref) - 1.0
     i1 = - assemble(inner(u, Constant((0, 1.)))*ds(1) + tau*ds(1))
     i2 = - assemble(inner(u2, Constant((0, -1.)))*ds(3) + tau*ds(1))
 
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # different weights for H_sigma matrix
     weight = [0.01, 0.01, 0.001]
     # different penalization parameters
-    eta = [4, 20, 100]
+    eta = [40, 200, 1000]
 
     for j in range(len(eta)):
         # bounds for the constraints
