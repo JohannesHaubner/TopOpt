@@ -290,7 +290,7 @@ if __name__ == "__main__":
 
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
-        inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
+        inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma, parameters).get_matrix(weighting)
 
         scaling_Js = [1.0, eta[j]]
 
@@ -307,6 +307,6 @@ if __name__ == "__main__":
         problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds, preprocessing,
                                inner_product_matrix, reg)
         ipopt = IPOPTSolver(problem, parameters_ipopt)
-        breakpoint()
+
         x0 = ipopt.solve(x0)
         save_control(x0, controls_file, j+1, J = Jeval)
