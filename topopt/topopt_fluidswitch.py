@@ -175,7 +175,7 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
     rho = preprocessing.dof_to_control(x0)
     rho_func = Function(B)
     rho_func.vector()[:] = rho[range(len(rho_func.vector()[:]))]
-    rho.rename("density", "density")
+    rho_func.rename("density", "density")
     print('objective function value J', J(rho))
     controls_file << rho
     if index +1:

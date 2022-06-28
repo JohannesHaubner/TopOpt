@@ -5,9 +5,10 @@ from quadrature.quadrature import get_weights
 import scipy.sparse as sps
 import scipy.sparse as sparse
 import pickle
+from enlarge_matrix import enlarge
 
 class AssembleHs:
-    def __init__(self, N, delta, sigma):
+    def __init__(self, N, delta, sigma, parameters=None):
         """
         we assume the mesh size for the degrees of freedom to be uniform quadrilateral in x and y direction
         with numbering
@@ -43,6 +44,10 @@ class AssembleHs:
         self.loc = self.__get_entries_of_local_stencils()
         self.Hs_glob_matrix = self.__get_global_matrix()
         self.L2_glob_matrix = self.__get_L2_matrix()
+
+        if parameters != None:
+            self.L2_glob_matrix = enlarge(self.L2_glob_matrix, parameters["extra"])
+            self.Hs_glob_matrix = enlarge(self.Hs_glob_matrix, parameters["extra"])
 
 
     def get_matrix(self, weighting):
