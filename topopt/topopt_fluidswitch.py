@@ -61,12 +61,6 @@ class Noslip(SubDomain):
                                 and near(x[1], 0.0)) or (near(x[1], 1.0) and between(x[0], (0.0, 0.1)))
                                 or (near(x[1], 1.0) and between(x[0], (0.3, 0.5))))
 
-# pressure BC
-class PressureB(SubDomain):
-    def inside(self, x, on_boundary):
-        return near(x[0], (0.0)) and near(x[1], (0.5))
-
-pressureB = PressureB()
 
 doi_A = DOI_A()
 doi_B = DOI_B()
@@ -143,11 +137,11 @@ def forward(rho):
     F = (alpha(rho) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
          inner(grad(u)*u, v) * dx + inner(grad(p), v) * dx  + inner(div(u), q) * dx)
     bc1 = DirichletBC(W.sub(0), InflowOutflow(degree=2), marker, 2)
-    bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
+    #bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
     bc3 = DirichletBC(W.sub(0), Constant((0., 0.)), marker, 4)
-    bc4 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 1)
-    bc5 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 3)
-    bc = [bc1, bc2, bc3, bc4, bc5]
+    bc4 = DirichletBC(W.sub(1), Constant(0.0), marker, 1)
+    bc5 = DirichletBC(W.sub(1), Constant(0.0), marker, 3)
+    bc = [bc1, bc3, bc4, bc5]
     solve(F == 0, w, bcs=bc)
     return w
 
@@ -164,11 +158,11 @@ def forward2(rho):
     F = (alpha(rho) * inner(u2, v) * dx + inner(grad(u2), grad(v)) * dx +
          inner(grad(u2) * u2, v) * dx + inner(grad(p2), v) * dx + inner(div(u2), q) * dx)
     bc1 = DirichletBC(W.sub(0), InflowOutflow_50(degree=2), marker, 2)
-    bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
+    #bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
     bc3 = DirichletBC(W.sub(0), Constant((0., 0.)), marker, 4)
-    bc4 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 1)
-    bc5 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 3)
-    bc = [bc1, bc2, bc3, bc4, bc5]
+    bc4 = DirichletBC(W.sub(1), Constant(0.0), marker, 1)
+    bc5 = DirichletBC(W.sub(1), Constant(0.0), marker, 3)
+    bc = [bc1, bc3, bc4, bc5]
     solve(F == 0, w2, bcs=bc)
     return w2
 
