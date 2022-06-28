@@ -266,9 +266,9 @@ if __name__ == "__main__":
     # problem
     problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
                            preprocessing, inner_product_matrix, reg)
-    parameters = {}
-    parameters["N"] = len(x0)
-    ipopt = IPOPTSolver(problem, parameters)
+    parameters_ipopt = {}
+    parameters_ipopt["N"] = len(x0)
+    ipopt = IPOPTSolver(problem, parameters_ipopt)
 
     #ipopt.test_objective(len(x0))
     #ipopt.test_constraints(len(x0), 1, option=1)
@@ -306,9 +306,7 @@ if __name__ == "__main__":
         # solve optimization problem
         problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds, preprocessing,
                                inner_product_matrix, reg)
-        parameters = {}
-        parameters["N"] = len(x0)-1
-        ipopt = IPOPTSolver(problem, parameters)
-
+        ipopt = IPOPTSolver(problem, parameters_ipopt)
+        breakpoint()
         x0 = ipopt.solve(x0)
         save_control(x0, controls_file, j+1, J = Jeval)
