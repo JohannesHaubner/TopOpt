@@ -176,7 +176,7 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
     rho_func = Function(B)
     rho_func.vector()[:] = rho[range(len(rho_func.vector()[:]))]
     rho_func.rename("density", "density")
-    print('objective function value J', J(rho_func))
+    print('objective function value J', J([rho_func]+[Constant(x0[-1])]))
     controls_file << rho
     if index +1:
         filename = '../Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
@@ -275,7 +275,7 @@ if __name__ == "__main__":
 
     x0 = ipopt.solve(x00)
 
-    save_control(x00, controls_file, 0, J = Jhat[0])
+    save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
     weight = [0.01, 0.01, 0.001]
