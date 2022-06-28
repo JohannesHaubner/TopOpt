@@ -230,7 +230,9 @@ if __name__ == "__main__":
     #J = 1e-2*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good
     #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     tau = Constant(0.)
-    J = assemble( tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
+    J = assemble(tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
+    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
 
@@ -238,8 +240,8 @@ if __name__ == "__main__":
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
     g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (2 * ref) - 1.0
-    i1 = - assemble(inner(u, Constant((0, 1.)))*ds(1) + tau*ds(1))
-    i2 = - assemble(inner(u2, Constant((0, -1.)))*ds(3) + tau*ds(1))
+    i1 = - assemble(inner(u, Constant((0, -1.)))*ds(1) + tau*ds(1))
+    i2 = - assemble(inner(u2, Constant((0, 1.)))*ds(3) + tau*ds(1))
 
 
     m = [Control(rho)] + [Control(tau)]
@@ -252,7 +254,7 @@ if __name__ == "__main__":
     bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
-    scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
+    scaling_Js = [100.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
     scaling_constraints = [1.0, 1.0, 1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
 
     # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
@@ -292,7 +294,7 @@ if __name__ == "__main__":
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
         inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma, parameters).get_matrix(weighting)
 
-        scaling_Js = [1.0, eta[j]]
+        scaling_Js = [100.0, eta[j]]
 
         # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
         J_ = 0
