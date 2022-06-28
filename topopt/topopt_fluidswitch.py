@@ -176,7 +176,7 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
     rho_func = Function(B)
     rho_func.vector()[:] = rho[range(len(rho_func.vector()[:]))]
     rho_func.rename("density", "density")
-    print('objective function value J', J(rho))
+    print('objective function value J', J(rho_func))
     controls_file << rho
     if index +1:
         filename = '../Output/matlab_controls_' + str(N) + '_' + str(index +1) + '.mat'
