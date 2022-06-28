@@ -231,8 +231,8 @@ if __name__ == "__main__":
     #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     tau = Constant(0.)
     J = assemble(tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
-    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
-    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
+    J += 1e-6 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    J += 1e-6 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
 

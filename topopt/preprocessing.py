@@ -55,6 +55,7 @@ class Preprocessing:
         self.k = len(Function(self.DG0).vector()[:])
         self.h = 1./N
         self.parameters = False
+        self.range_max = self.k
         if parameters != None:
             self.parameters = True
             self.range_max = parameters["design_len"]
@@ -98,6 +99,7 @@ class Preprocessing:
         y0 describes the density function defined on the uniform quadrilateral mesh,
         described in Sec. 7.6
         """
+        y0_ = y0
         if self.parameters:
             y0 = y0[:self.range_max]
         y00 = (2.*V/delta-1.)*np.ones(len(y0))
@@ -113,7 +115,7 @@ class Preprocessing:
         y_ = y00 +t*deltay
 
         if self.parameters:
-            y_ = np.append(y_, y0[self.range_max:])
+            y_ = np.append(y_, y0_[self.range_max:])
 
         return y_
 
