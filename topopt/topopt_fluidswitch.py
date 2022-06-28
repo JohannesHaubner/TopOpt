@@ -64,7 +64,7 @@ class Noslip(SubDomain):
 # pressure BC
 class PressureB(SubDomain):
     def inside(self, x, on_boundary):
-        return near(x[0], (1.0)) and near(x[1], (1.0))
+        return near(x[0], (0.0)) and near(x[1], (0.5))
 
 pressureB = PressureB()
 
@@ -99,6 +99,7 @@ U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 U = FunctionSpace(mesh, U_h)
+P = FunctionSpace(mesh, P_h)
 
 B = FunctionSpace(mesh, "DG", 0)
 b = Function(B)
@@ -216,15 +217,20 @@ if __name__ == "__main__":
     allctrls = File("../Output/allcontrols_new_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
     allvel = File("../Output/allvelocities.pvd")
+    allpres = File("../Output/allpressure.pvd")
     u_viz = Function(U, name="VelocityVisualization")
+    p_viz = Function(P, name="PressureVisualization")
 
     def eval_cb(j, rho):
         rho_viz.assign(rho[0])
         controls << rho_viz
         allctrls << rho_viz
-        u = forward(rho)
+        w = forward(rho)
+        (u,p) = w.split(deepcopy=True)
         u_viz.assign(u)
+        p_viz.assign(p)
         allvel << u_viz
+        allpres << p_viz
 
     # objective function
     #J = 1e-2*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good

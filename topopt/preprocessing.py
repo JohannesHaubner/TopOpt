@@ -112,7 +112,7 @@ class Preprocessing:
 
         y_ = y00 +t*deltay
 
-        if self.paramters:
+        if self.parameters:
             y_ = np.append(y_, y0[self.range_max:])
 
         return y_
