@@ -109,7 +109,7 @@ class InflowOutflow(UserExpression):
     def eval(self, values, x):
         values[1] = 0.0
         values[0] = 0.0
-        values[1] = -.1/0.01*(x[0]-0.1)*(0.3-x[0])
+        values[1] = -.5/0.01*(x[0]-0.1)*(0.3-x[0])
 
     def value_shape(self):
         return (2,)
@@ -118,7 +118,7 @@ class InflowOutflow_50(UserExpression):
     def eval(self, values, x):
         values[1] = 0.0
         values[0] = 0.0
-        values[1] = -1./0.01*(x[0]-0.1)*(0.3-x[0])
+        values[1] = -50./0.01*(x[0]-0.1)*(0.3-x[0])
 
     def value_shape(self):
         return (2,)
@@ -211,8 +211,10 @@ if __name__ == "__main__":
     allctrls = File("../Output/allcontrols_new_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
     allvel = File("../Output/allvelocities.pvd")
+    allvel2 = File("../Output/allvelocities2.pvd")
     allpres = File("../Output/allpressure.pvd")
     u_viz = Function(U, name="VelocityVisualization")
+    u_viz2 = Function(U, name="VelocityVisualization")
     p_viz = Function(P, name="PressureVisualization")
 
     def eval_cb(j, rho):
@@ -220,10 +222,14 @@ if __name__ == "__main__":
         controls << rho_viz
         allctrls << rho_viz
         w = forward(rho)
+        w2 = forward2(rho)
         (u,p) = w.split(deepcopy=True)
+        (u2,p2) = w2.split(deepcopy=True)
         u_viz.assign(u)
+        u_viz2.assign(u2)
         p_viz.assign(p)
         allvel << u_viz
+        allvel2 << u_viz2
         allpres << p_viz
 
     # objective function
@@ -231,15 +237,15 @@ if __name__ == "__main__":
     #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     tau = Constant(0.)
     J = assemble(tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
-    J += 1e-6 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
-    J += 1e-6 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
+    J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
-    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (2 * ref) - 1.0
+    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (10 * ref) - 1.0
     i1 = - assemble(inner(u, Constant((0, -1.)))*ds(1) + tau*ds(1))
     i2 = - assemble(inner(u2, Constant((0, 1.)))*ds(3) + tau*ds(1))
 
@@ -254,7 +260,7 @@ if __name__ == "__main__":
     bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
-    scaling_Js = [100.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
+    scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
     scaling_constraints = [1.0, 1.0, 1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
 
     # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
@@ -263,7 +269,7 @@ if __name__ == "__main__":
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
-    reg = 1e-6                     # regularization parameter
+    reg = 1e-1                    # regularization parameter
 
     # problem
     problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
@@ -288,13 +294,13 @@ if __name__ == "__main__":
         # bounds for the constraints
         bounds = [[-1e6, 0.0], [0.0, 0.0], [-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]]
 
-        reg = 1e-6
+        reg = 1e-1
 
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
         inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma, parameters).get_matrix(weighting)
 
-        scaling_Js = [100.0, eta[j]]
+        scaling_Js = [1.0, eta[j]]
 
         # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
         J_ = 0

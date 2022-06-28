@@ -38,7 +38,7 @@ def test_chainrule():
 
     # objective and derivative
     b = preproc.dof_to_control(x0)
-    J = assemble(inner(b, b) * dx)
+    J = assemble(inner(b, b) * dx(mesh))
     Jhat = ReducedFunctional(J, Control(b))
     j0 = Jhat(b)
     dJ = Jhat.derivative()
@@ -89,4 +89,4 @@ def test_move_onto_sphere():
 
     # check spherical constraint
     rho0 = preproc.dof_to_control(y)
-    assert assemble((rho0*rho0 - 1.0)*dx) < 1e-14
+    assert assemble((rho0*rho0 - 1.0)*dx(mesh)) < 1e-14
