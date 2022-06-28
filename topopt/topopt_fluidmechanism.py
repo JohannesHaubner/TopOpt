@@ -33,55 +33,43 @@ def alpha(rho):
                                                      alphabar*(-1.0/16*rho**4 + 3.0/8*rho**2 -0.5*rho + 3.0/16),
                                                      -1.0*alphabar*rho))
 
-def smoothmin(a, b):
-    return conditional(gt(a-b, 0.0), rho**2, 0.0) + conditional(gt(b-a, 0.0), rho**2, 0.0)
-
 N = 40
-delta = 1.0  # The aspect ratio of the domain, 1 high and \delta wide
-V = 1.0/2 * delta  # want the fluid to occupy 1/3 of the domain
-mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, delta), int(delta*N), int(delta * N)))
+delta = 5.0  # The aspect ratio of the domain, 1 high and \delta wide
+V = 1.0/3 * delta  # want the fluid to occupy 1/3 of the domain
+mesh = Mesh(RectangleMesh(MPI.comm_world, Point(0.0, 0.0), Point(delta, 1.0), int(delta*N), N))
 
 controls_file = File('../Output/final_controls_new_' + str(N) +'.pvd')
 
-class DOI_A(SubDomain):
+class DOI(SubDomain):
     def inside(self, x, on_boundary):
-        return between(x[0], (0.5, 1.0)) and near(x[1], 0.0) and on_boundary
-
-class DOI_B(SubDomain):
-    def inside(self, x, on_boundary):
-        return between(x[0], (0.5, 1.0)) and near(x[1], 1.0) and on_boundary
+        return near(x[0], (2.5)) and between(x[1], (0.475, 0.525))
 
 class Inflow(SubDomain):
     def inside(self, x, on_boundary):
-        return near(x[1], 1.0) and between(x[0], (0.1, 0.3)) and on_boundary
+        return near(x[0], 0.0) and on_boundary
+
+class Outflow(SubDomain):
+    def inside(self, x, on_boundary):
+        return near(x[0], delta) and on_boundary
 
 class Noslip(SubDomain):
     def inside(self, x, on_boundary):
-        return on_boundary and (near(x[0], 0.0) or near(x[0], 1.0) or (between(x[0], (0.0, 0.5))
-                                and near(x[1], 0.0)) or (near(x[1], 1.0) and between(x[0], (0.0, 0.1)))
-                                or (near(x[1], 1.0) and between(x[0], (0.3, 0.5))))
+        return near(x[1], 0.) or near(x[1], 1.)
 
-# pressure BC
-class PressureB(SubDomain):
-    def inside(self, x, on_boundary):
-        return near(x[0], (1.0)) and near(x[1], (1.0))
-
-pressureB = PressureB()
-
-doi_A = DOI_A()
-doi_B = DOI_B()
+doi = DOI()
 inflow = Inflow()
+outflow = Outflow()
 noslip = Noslip()
 marker = cpp.mesh.MeshFunctionSizet(mesh, 1)
 marker.set_all(0)
-noslip.mark(marker, 4)
-doi_A.mark(marker, 1)
+doi.mark(marker, 1)
 inflow.mark(marker, 2)
-doi_B.mark(marker, 3)
+outflow.mark(marker, 3)
+noslip.mark(marker, 4)
 
 file = File("../Output/mesh.pvd")
 file << marker
-ds = Measure("ds", domain=mesh, subdomain_data=marker)
+ds = Measure("dS", domain=mesh, subdomain_data=marker)
 
 # test if alpha does the correct thing
 #P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
@@ -98,7 +86,6 @@ A = FunctionSpace(mesh, "DG", 0)        # control function space
 U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
-U = FunctionSpace(mesh, U_h)
 
 B = FunctionSpace(mesh, "DG", 0)
 b = Function(B)
@@ -108,22 +95,15 @@ b.vector()[:] = range(k)
 #file = File("./Output/b_ved.pvd")
 #file << b
 
+
 # Define the boundary condition on velocity
 
 class InflowOutflow(UserExpression):
     def eval(self, values, x):
         values[1] = 0.0
         values[0] = 0.0
-        values[1] = -.1/0.01*(x[0]-0.1)*(0.3-x[0])
 
-    def value_shape(self):
-        return (2,)
-
-class InflowOutflow_50(UserExpression):
-    def eval(self, values, x):
-        values[1] = 0.0
-        values[0] = 0.0
-        values[1] = -1./0.01*(x[0]-0.1)*(0.3-x[0])
+        values[0] = 4.*x[1]*(1.0 - x[1])
 
     def value_shape(self):
         return (2,)
@@ -131,50 +111,21 @@ class InflowOutflow_50(UserExpression):
 def forward(rho):
     """Solve the forward problem for a given fluid distribution rho(x)."""
     w = Function(W)
-    (u, p) = split(w)
+    (u, p) = TrialFunctions(W)
     (v, q) = TestFunctions(W)
-
-    try: #nicer way to implement
-        rho = rho[0]
-    except:
-        pass
 
     F = (alpha(rho) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
-         inner(grad(u)*u, v) * dx + inner(grad(p), v) * dx  + inner(div(u), q) * dx)
+         inner(grad(p), v) * dx  + inner(div(u), q) * dx)
     bc1 = DirichletBC(W.sub(0), InflowOutflow(degree=2), marker, 2)
-    bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
+    bc2 = DirichletBC(W.sub(1), Constant(0.0), marker, 3)
     bc3 = DirichletBC(W.sub(0), Constant((0., 0.)), marker, 4)
-    bc4 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 1)
-    bc5 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 3)
-    bc = [bc1, bc2, bc3, bc4, bc5]
-    solve(F == 0, w, bcs=bc)
+    bc = [bc1, bc2, bc3]
+    solve(lhs(F) == rhs(F), w, bcs=bc)
+
     return w
-
-def forward2(rho):
-    w2 = Function(W)
-    (u2, p2) = split(w2)
-    (v, q) = TestFunctions(W)
-
-    try: #nicer way to implement
-        rho = rho[0]
-    except:
-        pass
-
-    F = (alpha(rho) * inner(u2, v) * dx + inner(grad(u2), grad(v)) * dx +
-         inner(grad(u2) * u2, v) * dx + inner(grad(p2), v) * dx + inner(div(u2), q) * dx)
-    bc1 = DirichletBC(W.sub(0), InflowOutflow_50(degree=2), marker, 2)
-    bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
-    bc3 = DirichletBC(W.sub(0), Constant((0., 0.)), marker, 4)
-    bc4 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 1)
-    bc5 = DirichletBC(W.sub(0).sub(0), Constant(0.0), marker, 3)
-    bc = [bc1, bc2, bc3, bc4, bc5]
-    solve(F == 0, w2, bcs=bc)
-    return w2
 
 def save_control(x0, controls_file, index=-1, J = None): #TODO
     rho = preprocessing.dof_to_control(x0)
-    rho_func = Function(B)
-    rho_func.vector()[:] = rho[range(len(rho_func.vector()[:]))]
     rho.rename("density", "density")
     print('objective function value J', J(rho))
     controls_file << rho
@@ -185,20 +136,14 @@ def save_control(x0, controls_file, index=-1, J = None): #TODO
 
 if __name__ == "__main__":
     x0 = (2.*V/delta -1)*np.ones(int(k/2))
-    x00 = np.append(x0, [0.])
 
     # preprocessing class which contains dof_to_control-mapping
     weighting = 0.1 # consider L2-mass-matrix + weighting * Hs-matrix
     sigma = 7./16
-    parameters = {}
-    parameters["extra"] = 1
-    parameters["design_len"] = len(x0)
-    preprocessing = Preprocessing(N, B, parameters=parameters)
-    inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma, parameters).get_matrix(weighting)
+    preprocessing = Preprocessing(N, B)
+    inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
 
-    rhovec = preprocessing.dof_to_control(x00)
-    rho = Function(B)
-    rho.vector()[:] = rhovec[range(len(rho.vector()[:]))]
+    rho = preprocessing.dof_to_control(x0)
 
     # reference value
     uref = forward(Constant(1.0))
@@ -206,54 +151,40 @@ if __name__ == "__main__":
 
     # get reduced objective function: rho --> j(rho)
     set_working_tape(Tape())
-    w  = forward(rho)
-    w2 = forward2(rho)
-
-    (u, p) = w.split()
-    (u2, p2) = w2.split()
+    w   = forward(rho)
+    (u, p) = split(w)
 
     controls = File("../Output/control_iterations_guess_new_" + str(N) +".pvd")
     allctrls = File("../Output/allcontrols_new_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
-    allvel = File("../Output/allvelocities.pvd")
-    u_viz = Function(U, name="VelocityVisualization")
+
 
     def eval_cb(j, rho):
-        rho_viz.assign(rho[0])
+        rho_viz.assign(rho)
         controls << rho_viz
         allctrls << rho_viz
-        u = forward(rho)
-        u_viz.assign(u)
-        allvel << u_viz
 
     # objective function
     #J = 1e-2*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good
-    #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
-    tau = Constant(0.)
-    J = assemble((rho + tau) * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
+    J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     # penalty term in objective function
-    J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
+    J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 *dx + ufl.Max(-rho - 1.0, 0.0)**2 *dx)
+    m = Control(rho)
+    #
+    Js = [J, J2]
+
+    Jeval = ReducedFunctional(J, m)
 
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
     g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (10 * ref) - 1.0
-    i1 = - assemble(inner(u, Constant((0, 1.)))*ds(1) + tau*ds(1))
-    i2 = - assemble(inner(u2, Constant((0, -1.)))*ds(3) + tau*ds(1))
-
-
-    m = [Control(rho)] + [Control(tau)]
-    #
-    Js = [J, J2]
-
-    Jeval = ReducedFunctional(J, m)
-    constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m), ReducedFunctional(g,m),
-                   ReducedFunctional(i1, m), ReducedFunctional(i2, m)]
-    bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
+    constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m), ReducedFunctional(g,m)]
+    bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
     # scaling
     scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
-    scaling_constraints = [1.0, 1.0, 1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
+    scaling_constraints = [1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
 
     # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
     J_ = 0
@@ -261,30 +192,28 @@ if __name__ == "__main__":
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
-    reg = 1e-6                     # regularization parameter
+    reg = 1e-6                       # regularization parameter
 
     # problem
     problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
                            preprocessing, inner_product_matrix, reg)
-    parameters = {}
-    parameters["N"] = len(x0)
-    ipopt = IPOPTSolver(problem, parameters)
+    ipopt = IPOPTSolver(problem)
 
     #ipopt.test_objective(len(x0))
     #ipopt.test_constraints(len(x0), 1, option=1)
 
-    x0 = ipopt.solve(x00)
+    x0 = ipopt.solve(x0)
 
-    save_control(x00, controls_file, 0, J = Jhat[0])
+    save_control(x0, controls_file, 0, J = Jhat[0])
 
     # different weights for H_sigma matrix
     weight = [0.01, 0.01, 0.001]
     # different penalization parameters
-    eta = [4, 20, 100]
+    eta = [0.4, 2, 10]
 
     for j in range(len(eta)):
         # bounds for the constraints
-        bounds = [[-1e6, 0.0], [0.0, 0.0], [-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]]
+        bounds = [[-1e6, 0.0], [0.0, 0.0], [-1e6, 0.0]]
 
         reg = 1e-6
 
@@ -306,9 +235,7 @@ if __name__ == "__main__":
         # solve optimization problem
         problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds, preprocessing,
                                inner_product_matrix, reg)
-        parameters = {}
-        parameters["N"] = len(x0)-1
-        ipopt = IPOPTSolver(problem, parameters)
+        ipopt = IPOPTSolver(problem)
 
         x0 = ipopt.solve(x0)
         save_control(x0, controls_file, j+1, J = Jeval)

@@ -170,10 +170,10 @@ class IPOPTSolver(OptimizationSolver):
             # x to deformation
             print('evaluate objective')
             tx = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_control(tx)
+            rhovec = self.problem.preprocessing.dof_to_control(tx)
             j = 0
             for i in range(len(self.problem.Jhat)):
-                j += self.problem.scaling_Jhat[i]*self.problem.Jhat[i](rho.vector()[:])
+                j += self.problem.scaling_Jhat[i]*self.problem.Jhat[i](rhovec)
             j += 0.5 * self.problem.reg * np.dot(np.asarray(x), np.asarray(x))       # regularization
             return j
 
@@ -184,15 +184,16 @@ class IPOPTSolver(OptimizationSolver):
             # print('evaluate derivative of objective funtion')
             print('evaluate gradient')
             tx = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_control(tx)
+            rhovec = self.problem.preprocessing.dof_to_control(tx)
             # savety feature:
-            if (max(abs(self.problem.Jhat[0].get_controls() - rho.vector()[:])) > 1e-12):
+            if (max(abs(self.problem.Jhat[0].get_controls() - rhovec)) > 1e-12):
                 print('update control')
-                [self.problem.Jhat[i](rho.vector()[:]) for i in range(len(self.problem.Jhat))]
-            dJf = np.zeros(len(rho.vector()[:]))
+                [self.problem.Jhat[i](rhovec) for i in range(len(self.problem.Jhat))]
+            dJf = np.zeros(len(rhovec))
             for i in range(len(self.problem.Jhat)):
                 dJf += self.problem.scaling_Jhat[i]*self.problem.Jhat[i].derivative(forget=False, project=False)
             dJ = self.problem.preprocessing.dof_to_control_chainrule(dJf, 2)
+            #breakpoint()
             dJ = self.problem.transformation_chainrule(dJ)
             dJ += self.problem.reg * x
             return np.asarray(dJ, dtype=float)
@@ -202,11 +203,11 @@ class IPOPTSolver(OptimizationSolver):
             # The callback for calculating the constraints
             print('evaluate constraint')
             xt = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_control(xt)
+            rhovec = self.problem.preprocessing.dof_to_control(xt)
             constraints = []
             for i in range(len(self.problem.constraints)):
                 constraints.append(self.problem.scaling_constraints[i]
-                                   *self.problem.constraints[i](rho.vector()[:])
+                                   *self.problem.constraints[i](rhovec)
                                    )
             return np.array(constraints)
 
@@ -216,13 +217,13 @@ class IPOPTSolver(OptimizationSolver):
             #
             print('evaluate jacobian')
             xt = self.trafo(x)
-            rho = self.problem.preprocessing.dof_to_control(xt)
+            rhovec = self.problem.preprocessing.dof_to_control(xt)
             dconstraints = []
 
             # savety feature:
-            if (max(abs(self.problem.constraints[0].get_controls() - rho.vector()[:])) > 1e-12):
+            if (max(abs(self.problem.constraints[0].get_controls() - rhovec)) > 1e-12):
                 print('update control')
-                [self.problem.constraints[i](rho.vector()[:]) for i in range(len(self.problem.constraints))]
+                [self.problem.constraints[i](rhovec) for i in range(len(self.problem.constraints))]
 
             for i in range(len(self.problem.constraints)):
                 di = self.problem.constraints[i].derivative()
