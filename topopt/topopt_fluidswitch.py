@@ -109,7 +109,7 @@ class InflowOutflow(UserExpression):
     def eval(self, values, x):
         values[1] = 0.0
         values[0] = 0.0
-        values[1] = -.5/0.01*(x[0]-0.1)*(0.3-x[0])
+        values[1] = -1./0.01*(x[0]-0.1)*(0.3-x[0])
 
     def value_shape(self):
         return (2,)
@@ -118,7 +118,7 @@ class InflowOutflow_50(UserExpression):
     def eval(self, values, x):
         values[1] = 0.0
         values[0] = 0.0
-        values[1] = -50./0.01*(x[0]-0.1)*(0.3-x[0])
+        values[1] = -1./0.01*(x[0]-0.1)*(0.3-x[0])
 
     def value_shape(self):
         return (2,)
@@ -134,7 +134,7 @@ def forward(rho):
     except:
         pass
 
-    F = (alpha(rho) * inner(u, v) * dx + inner(grad(u), grad(v)) * dx +
+    F = (alpha(rho) * inner(u, v) * dx + 2*inner(grad(u), grad(v)) * dx +
          inner(grad(u)*u, v) * dx + inner(grad(p), v) * dx  + inner(div(u), q) * dx)
     bc1 = DirichletBC(W.sub(0), InflowOutflow(degree=2), marker, 2)
     #bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
@@ -155,7 +155,7 @@ def forward2(rho):
     except:
         pass
 
-    F = (alpha(rho) * inner(u2, v) * dx + inner(grad(u2), grad(v)) * dx +
+    F = (alpha(rho) * inner(u2, v) * dx + 0.02* inner(grad(u2), grad(v)) * dx +
          inner(grad(u2) * u2, v) * dx + inner(grad(p2), v) * dx + inner(div(u2), q) * dx)
     bc1 = DirichletBC(W.sub(0), InflowOutflow_50(degree=2), marker, 2)
     #bc2 = DirichletBC(W.sub(1), Constant(0.0), pressureB, method='pointwise')
@@ -237,8 +237,8 @@ if __name__ == "__main__":
     #J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
     tau = Constant(0.)
     J = assemble(tau * dx(mesh)) # assemble(inner(u, Constant((0, 1.)))*ds(1)) + assemble(inner(u2, Constant((0, -1.)))*ds(3))
-    J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
-    J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
+    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)
+    #J += 1e-4 * assemble(0.5 * inner(alpha(rho) * u2, u2) * dx + 0.5 * mu * inner(grad(u2), grad(u2)) * dx)
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 * dx + ufl.Max(-rho - 1.0, 0.0)**2 * dx)
 
@@ -246,8 +246,8 @@ if __name__ == "__main__":
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
     g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (10 * ref) - 1.0
-    i1 = - assemble(inner(u, Constant((0, -1.)))*ds(1) + tau*ds(1))
-    i2 = - assemble(inner(u2, Constant((0, 1.)))*ds(3) + tau*ds(1))
+    i1 = assemble(- inner(u, Constant((0, -1.)))*ds(1) - 2*tau*ds(1))
+    i2 = assemble(-inner(u2, Constant((0, 1.)))*ds(3) - 2*tau*ds(1))
 
 
     m = [Control(rho)] + [Control(tau)]
@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     # scaling
     scaling_Js = [1.0, 0.0]  # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
-    scaling_constraints = [1.0, 1.0, 1.0, 1.0, 1.0]  # scaling of constraints for Ipopt
+    scaling_constraints = [1.0, 1.0, 1.0, 100.0, 100.0]  # scaling of constraints for Ipopt
 
     # for performance reasons we first add J and J2 and hand the sum over to the IPOPT solver
     J_ = 0
@@ -269,7 +269,7 @@ if __name__ == "__main__":
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
-    reg = 1e-1                    # regularization parameter
+    reg = 1e-4                    # regularization parameter
 
     # problem
     problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
@@ -294,7 +294,7 @@ if __name__ == "__main__":
         # bounds for the constraints
         bounds = [[-1e6, 0.0], [0.0, 0.0], [-1e6, 0.0], [-1e6, 0.0], [-1e6, 0.0]]
 
-        reg = 1e-1
+        reg = 1e-4
 
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
