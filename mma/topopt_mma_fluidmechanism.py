@@ -88,7 +88,7 @@ U_h = VectorElement("CG", mesh.ufl_cell(), 2)
 P_h = FiniteElement("CG", mesh.ufl_cell(), 1)
 W = FunctionSpace(mesh, U_h*P_h)          # mixed Taylor-Hood function space
 
-B = FunctionSpace(mesh, "CG", 1)          # control function space
+B = FunctionSpace(mesh, "DG", 0) # FunctionSpace(mesh, "CG", 1)          # control function space
 b = Function(B)
 k = len(b.vector()[:])
 b.vector()[:] = range(k)
@@ -153,7 +153,8 @@ if __name__ == "__main__":
         controls << rho_viz
         allctrls << rho_viz
 
-    uref = forward(Constant(1.0),q)
+    wref = forward(Constant(1.0), q)
+    uref, pref = wref.split(deepcopy=True)
     ref = assemble(0.5 * mu * inner(grad(uref), grad(uref)) * dx)
 
     for q in [0.01, 0.1, 1, 10, 100]: # [0.001, 0.01, 0.1, 1, 10, 100]:
@@ -172,9 +173,9 @@ if __name__ == "__main__":
 
         # constraints
         v = 1.0 /V * assemble(rho * dx) - 1.0  # volume constraint
-        g = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)/(10* ref) - 1.0
+        g = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)/(130 * ref) - 1.0
 
-        constraints = [ReducedFunctional(v,m), ReducedFunctional(g,m)]
+        constraints = [ReducedFunctional(v, m), ReducedFunctional(g, m)]
 
         # scaling
         scaling_Jhat = [1.0]          # objective for optimization: scaling_Jhat[0]*Jhat[0]+scaling_Jhat[1]*Jhat[1]
