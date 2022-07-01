@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
         # constraints
         v = 1.0 /V * assemble(rho * dx) - 1.0  # volume constraint
-        g = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)/(10* ref) - 1.0
+        g = assemble(0.5 * inner(alpha(rho, q) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx)/(130 * ref) - 1.0
 
         constraints = [ReducedFunctional(v,m), ReducedFunctional(g,m)]
 
