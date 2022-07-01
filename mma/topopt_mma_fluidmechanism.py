@@ -153,7 +153,8 @@ if __name__ == "__main__":
         controls << rho_viz
         allctrls << rho_viz
 
-    uref = forward(Constant(1.0),q)
+    wref = forward(Constant(1.0), q)
+    uref, pref = wref.split(deepcopy=True)
     ref = assemble(0.5 * mu * inner(grad(uref), grad(uref)) * dx)
 
     for q in [0.01, 0.1, 1, 10, 100]: # [0.001, 0.01, 0.1, 1, 10, 100]:

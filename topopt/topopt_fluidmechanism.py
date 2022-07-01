@@ -146,7 +146,8 @@ if __name__ == "__main__":
     rho = preprocessing.dof_to_control(x0)
 
     # reference value
-    uref = forward(Constant(1.0))
+    wref = forward(Constant(1.0))
+    uref, pref = wref.split(deepcopy=True)
     ref = assemble(0.5 * mu * inner(grad(uref), grad(uref)) * dx)
 
     # get reduced objective function: rho --> j(rho)
