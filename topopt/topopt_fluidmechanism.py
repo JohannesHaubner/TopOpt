@@ -179,7 +179,7 @@ if __name__ == "__main__":
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
-    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (130 * ref) - 1.0
+    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (120 * ref) - 1.0
     constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m), ReducedFunctional(g,m)]
     bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         J_ += Js[i] * scaling_Js[i]
     Jhat = [ReducedFunctional(J_, m, eval_cb_post=eval_cb)]
 
-    reg = 1e-3                     # regularization parameter
+    reg = 1e-6                     # regularization parameter
 
     # problem
     problem = IPOPTProblem(Jhat, [1.0], constraints, scaling_constraints, bounds,
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
         # update inner product
         weighting = weight[j]  # consider L2-mass-matrix + weighting * Hs-matrix
-        inner_product_matrix = Hs_reg.AssembleHs(N,delta,sigma).get_matrix(weighting)
+        inner_product_matrix = Hs_reg.AssembleHs(N, delta, sigma).get_matrix(weighting)
 
         scaling_Js = [1.0, eta[j]]
 
