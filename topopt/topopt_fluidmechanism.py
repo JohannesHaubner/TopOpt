@@ -166,8 +166,8 @@ if __name__ == "__main__":
         allctrls << rho_viz
 
     # objective function
-    #J = 1e-2*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good
     J = assemble( inner(avg(u), Constant((1., 0)))*ds(1)) #1e2
+    # J += 1e-3*assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) #1e-3 works good
     # penalty term in objective function
     J2 = assemble(ufl.Max(rho - 1.0, 0.0)**2 *dx + ufl.Max(-rho - 1.0, 0.0)**2 *dx)
     m = Control(rho)
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     # constraints
     v = 1.0 /V * assemble((0.5 * (rho + 1)) * dx) - 1.0 # volume constraint
     s = assemble( 1.0/delta*(rho*rho - 1.0) * dx)         # spherical constraint
-    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (120 * ref) - 1.0
+    g = assemble(0.5 * inner(alpha(rho) * u, u) * dx + 0.5 * mu * inner(grad(u), grad(u)) * dx) / (130 * ref) - 1.0
     constraints = [ReducedFunctional(v,m), ReducedFunctional(s,m), ReducedFunctional(g,m)]
     bounds = [[0.0, 0.0],[-1.0, 0.0],[-1e6, 0.0]] # [[lower bound vc, upper bound vc],[lower bound sc, upper bound sc]]
 
