@@ -198,4 +198,3 @@ dependencies:
   - zstd=1.5.2=h8a70e8d_2
   - pip:
     - dolfin-adjoint==2019.1.2
-prefix: /home/joha/miniconda3/envs/topopt
