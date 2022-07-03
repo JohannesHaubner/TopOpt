@@ -26,6 +26,8 @@ The following fix might be necessary: https://fenicsproject.discourse.group/t/in
 
 For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html).
 
+For running the MMA examples, it is required to clone the github repository https://github.com/arjendeetman/GCMMA-MMA-Python into the folder mma/MMA_Python.
+
 ## Running Tests
 
 To run tests, run the following command
