@@ -155,8 +155,8 @@ if __name__ == "__main__":
     w   = forward(rho)
     (u, p) = split(w)
 
-    controls = File("../Output/2control_iterations_guess_new_" + str(N) +".pvd")
-    allctrls = File("../Output/2allcontrols_new_" + str(N) + ".pvd")
+    controls = File("../Output/control_iterations_guess_" + str(N) +".pvd")
+    allctrls = File("../Output/allcontrols_" + str(N) + ".pvd")
     rho_viz = Function(A, name="ControlVisualisation")
 
 
