@@ -1,4 +1,4 @@
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=plastic)](https://choosealicense.com/licenses/mit/)
+[![GNU GPLv3 License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=plastic)](https://choosealicense.com/licenses/gpl-3.0/)
 [![Test TopOpt](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml/badge.svg?style=plastic)](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml)
 
 # TopOpt
@@ -35,7 +35,7 @@ pytest
 ```
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
 
 ## Authors
 - [Johannes Haubner](https://www.github.com/JohannesHaubner)
