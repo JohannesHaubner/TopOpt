@@ -1,4 +1,4 @@
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=plastic)](https://choosealicense.com/licenses/mit/)
+[![GNU GPLv3 License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=plastic)](https://choosealicense.com/licenses/gpl-3.0/)
 [![Test TopOpt](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml/badge.svg?style=plastic)](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml)
 
 # TopOpt
@@ -24,8 +24,9 @@ conda deactivate topopt
 
 The following fix might be necessary: https://fenicsproject.discourse.group/t/installed-but-looking-for-libsuperlu-dist-so-6/7016/3
 
-For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html). The numerical results presented in the manuscript use 
-an installation of IPOPT that is linked against HSL.
+For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html).
+
+For running the MMA examples, it is required to clone the github repository https://github.com/arjendeetman/GCMMA-MMA-Python into the folder mma/MMA_Python.
 
 ## Running Tests
 
@@ -36,7 +37,7 @@ pytest
 ```
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
 
 ## Authors
 - [Johannes Haubner](https://www.github.com/JohannesHaubner)
