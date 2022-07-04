@@ -207,10 +207,7 @@ class MMASolver(OptimizationSolver):
                 residu, kktnorm, residumax = \
                     kktcheck(m, n, xmma, ymma, zmma, lam, xsi, eta, mu, zet, s, xmin, xmax, df0dx, fval, dfdx, a0, a, c,
                              d)
-                if self.globalize: # changed and adapted to our problem setting
-                    outvector1 = np.concatenate((np.array([outeriter, innerit, f0val]), fval.flatten()))
-                else: # changed and adapted to our problem setting
-                    outvector1 = np.concatenate((np.array([outeriter, f0val]), fval.flatten()))
+                outvector1 = np.concatenate((np.array([outeriter, innerit, f0val]), fval.flatten()))
                 outvector2 = xval.flatten()
                 # Log
                 logger.info("outvector1 = {}".format(outvector1))
