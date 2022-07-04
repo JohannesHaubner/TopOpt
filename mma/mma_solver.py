@@ -89,26 +89,26 @@ class MMASolver(OptimizationSolver):
 
     def solve(self, rho0):
         """
-        code snippet taken from
+        code snippet based on and taken from
         https://github.com/arjendeetman/GCMMA-MMA-Python/blob/master/Code/MMA_TOY2.py and /GCMMA_BEAM.py
         """
-        logger = self.logger
+        logger = self.logger    # changed from setup_logger(file) that is defined in __init__
         logger.info("Started\n")
         # Set numpy print options
         np.set_printoptions(precision=4, formatter={'float': '{: 0.4f}'.format})
         # Initial settings
-        m = len(self.problem.constraints)
-        n = len(rho0)
+        m = len(self.problem.constraints) # changed from m=2 to our problem setting
+        n = len(rho0)                     # changed from n= 3 to our problem setting
         epsimin = 0.0000001
         eeen = np.ones((n, 1))
         eeem = np.ones((m, 1))
         zeron = np.zeros((n, 1))
         zerom = np.zeros((m, 1))
-        xval = rho0.reshape((n,1))
+        xval = rho0.reshape((n,1))       # changed and adapted to our problem setting
         xold1 = xval.copy()
         xold2 = xval.copy()
-        xmin = self.problem.simple_bound_const[0].reshape((n, 1))
-        xmax = self.problem.simple_bound_const[1].reshape((n, 1))
+        xmin = self.problem.simple_bound_const[0].reshape((n, 1)) # changed and adapted to our problem setting
+        xmax = self.problem.simple_bound_const[1].reshape((n, 1)) # changed and adapted to our problem setting
         low = xmin.copy()
         upp = xmax.copy()
         move = 1.0
@@ -117,16 +117,16 @@ class MMASolver(OptimizationSolver):
         a0 = 1
         a = zerom.copy()
         outeriter = 0
-        maxoutit = self.maxoutit
-        kkttol = self.kkttol
+        maxoutit = self.maxoutit # changed and adapted to our problem setting
+        kkttol = self.kkttol     # changed and adapted to our problem setting
         # Calculate function values and gradients of the objective and constraints functions
         if outeriter == 0:
-            f0val, df0dx, fval, dfdx = self.problem(xval.T[0])
+            f0val, df0dx, fval, dfdx = self.problem(xval.T[0]) # changed and adapted to our problem setting
             if self.globalize:
                 innerit = 0
-                outvector1 = np.concatenate((np.array([outeriter, innerit, f0val]), fval.flatten()))
+                outvector1 = np.concatenate((np.array([outeriter, innerit, f0val]), fval.flatten())) # changed and adapted to our problem setting
             else:
-                outvector1 = np.concatenate((np.array([outeriter, f0val]), fval.flatten()))
+                outvector1 = np.concatenate((np.array([outeriter, f0val]), fval.flatten())) # changed and adapted to our problem setting
             outvector2 = xval.flatten()
             # Log
             logger.info("outvector1 = {}".format(outvector1))
@@ -134,7 +134,7 @@ class MMASolver(OptimizationSolver):
         # The iterations starts
         kktnorm = kkttol + 10
         outit = 0
-        if self.globalize == False:
+        if self.globalize == False: # changed and adapted to our problem setting
             while (kktnorm > kkttol) and (outit < maxoutit):
                 outit += 1
                 outeriter += 1
@@ -147,7 +147,7 @@ class MMASolver(OptimizationSolver):
                 xold1 = xval.copy()
                 xval = xmma.copy()
                 # Re-calculate function values and gradients of the objective and constraints functions
-                f0val, df0dx, fval, dfdx = self.problem(xval.T[0])
+                f0val, df0dx, fval, dfdx = self.problem(xval.T[0]) # changed and adapted to our problem setting
                 # The residual vector of the KKT conditions is calculated
                 residu, kktnorm, residumax = \
                     kktcheck(m, n, xmma, ymma, zmma, lam, xsi, eta, mu, zet, s, xmin, xmax, df0dx, fval, dfdx, a0, a, c, d)
@@ -175,7 +175,7 @@ class MMASolver(OptimizationSolver):
                              a, c, d)
                 # The user should now calculate function values (no gradients) of the objective- and constraint
                 # functions at the point xmma ( = the optimal solution of the subproblem).
-                f0valnew, fvalnew = self.problem(xmma, no_grad=True)
+                f0valnew, fvalnew = self.problem(xmma, no_grad=True) # changed and adapted to our problem setting
                 # It is checked if the approximations are conservative:
                 conserv = concheck(m, epsimin, f0app, f0valnew, fapp, fvalnew)
                 # While the approximations are non-conservative (conserv=0), repeated inner iterations are made:
@@ -194,7 +194,7 @@ class MMASolver(OptimizationSolver):
                                                                                             a0, a, c, d)
                         # The user should now calculate function values (no gradients) of the objective- and
                         # constraint functions at the point xmma ( = the optimal solution of the subproblem).
-                        f0valnew, fvalnew = self.problem(xmma, no_grad=True)
+                        f0valnew, fvalnew = self.problem(xmma, no_grad=True) # changed and adapted to our problem setting
                         # It is checked if the approximations have become conservative:
                         conserv = concheck(m, epsimin, f0app, f0valnew, fapp, fvalnew)
                 # Some vectors are updated:
@@ -202,14 +202,14 @@ class MMASolver(OptimizationSolver):
                 xold1 = xval.copy()
                 xval = xmma.copy()
                 # Re-calculate function values and gradients of the objective and constraints functions
-                f0val, df0dx, fval, dfdx = self.problem(xmma)
+                f0val, df0dx, fval, dfdx = self.problem(xmma) # changed and adapted to our problem setting
                 # The residual vector of the KKT conditions is calculated
                 residu, kktnorm, residumax = \
                     kktcheck(m, n, xmma, ymma, zmma, lam, xsi, eta, mu, zet, s, xmin, xmax, df0dx, fval, dfdx, a0, a, c,
                              d)
-                if self.globalize:
+                if self.globalize: # changed and adapted to our problem setting
                     outvector1 = np.concatenate((np.array([outeriter, innerit, f0val]), fval.flatten()))
-                else:
+                else: # changed and adapted to our problem setting
                     outvector1 = np.concatenate((np.array([outeriter, f0val]), fval.flatten()))
                 outvector2 = xval.flatten()
                 # Log
