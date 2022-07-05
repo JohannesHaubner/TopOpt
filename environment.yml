@@ -1,4 +1,4 @@
-name: topopt_top
+name: topopt
 channels:
   - conda-forge
   - defaults
