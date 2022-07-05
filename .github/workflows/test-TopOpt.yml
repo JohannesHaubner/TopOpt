@@ -31,6 +31,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        conda install -c conda-forge superlu_dist=6.2.0 --experimental-solver==libmamba
         conda install pytest
         pytest
