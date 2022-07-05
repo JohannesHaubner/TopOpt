@@ -1,10 +1,10 @@
-name: topopt
+name: topopt_top
 channels:
   - conda-forge
   - defaults
 dependencies:
   - conda=4.12.0
-  - python=3.9
+  - python=3.9.6
   - pip=21.3.1
   - fenics=2019.1.0
   - scipy=1.7.3
@@ -14,5 +14,33 @@ dependencies:
   - cyipopt=1.1.0
   - suitesparse=5.6.0
   - scikit-umfpack=0.3.2
+  - superlu_dist=6.2.0
+  - petsc=3.14.5
+  - petsc4py=3.14.1
+  - hdf5=1.10.6
+  - cyipopt=1.1.0
+  - ipopt=3.14.4
+  - mumps-seq=5.2.1
+  - mpmath=1.2.1
+  - matplotlib-base=3.5.1
+  - boost-cpp=1.74.0
+  - sympy=1.10.1
+  - slepc4py=3.14.0
+  - eigen=3.3.9
+  - mpi=1.0
+  - mpi4py=3.1.3
+  - scalapack=2.0.2
+  - metis=5.1.0
+  - pkgconfig=1.5.5
+  - superlu=5.2.2
+  - pybind11=2.6.2
+  - mumps-mpi=5.2.1
+  - mumps-include=5.2.1
+  - scotch=6.0.9
+  - ptscotch=6.0.9
+  - parmetis=4.0.3
+  - hypre=2.18.2
+  - pcre=8.45
+  - slepc=3.14.2
   - pip:
       - git+https://github.com/dolfin-adjoint/pyadjoint.git@2019.1.2

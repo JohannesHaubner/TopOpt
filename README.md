@@ -24,8 +24,6 @@ conda deactivate topopt
 
 It has to be ensured that the [conda-libmamba-solver](https://github.com/conda-incubator/conda-libmamba-solver) is installed.
 
-The following fix might be necessary: https://fenicsproject.discourse.group/t/installed-but-looking-for-libsuperlu-dist-so-6/7016/3
-
 For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html).
 
 For running the MMA examples, it is required to clone the github repository https://github.com/arjendeetman/GCMMA-MMA-Python into the folder mma/MMA_Python.
