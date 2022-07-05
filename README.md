@@ -13,7 +13,7 @@ http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-to
 ## Usage/Examples
 
 ```
-conda env create -f environment.yml
+conda env create -f environment.yml --experimental-solver=libmamba
 conda activate topopt
 
 cd topopt
@@ -21,6 +21,8 @@ python3 topopt.py
 
 conda deactivate topopt
 ```
+
+It has to be ensured that the [conda-libmamba-solver](https://github.com/conda-incubator/conda-libmamba-solver) is installed.
 
 The following fix might be necessary: https://fenicsproject.discourse.group/t/installed-but-looking-for-libsuperlu-dist-so-6/7016/3
 
