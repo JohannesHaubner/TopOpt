@@ -20,8 +20,6 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda update -n base conda
-        conda install -n base conda-libmamba-solver
         conda env update --file environment.yml --name base --experimental-solver=libmamba
     - name: Lint with flake8
       run: |
