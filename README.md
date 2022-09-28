@@ -1,7 +1,7 @@
 [![GNU GPLv3 License](https://img.shields.io/badge/license-GNU_GPLv3-green?style=plastic)](https://choosealicense.com/licenses/gpl-3.0/)
 [![Test TopOpt](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml/badge.svg?style=plastic)](https://github.com/JohannesHaubner/TopOpt/actions/workflows/test-TopOpt.yml)
 
-# TopOpt
+# TopOpt 
 
 Code repository for the manuscript
 
