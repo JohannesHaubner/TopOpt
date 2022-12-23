@@ -11,17 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2.2.0
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
-          use-mamba: true
-          mamba-version: "*"
-          channels: conda-forge,defaults
-          channel-priority: true
-          environment-file: environment.yml
-          python-version: 3.9
-          auto-activate-base: false
+           activate-environment: anaconda-client-env
+           environment-file: environment.yml
+           python-version: 3.9
+           auto-activate-base: false
       - name: Test with pytest
         run: |
           conda install pytest
