@@ -19,7 +19,6 @@ jobs:
           mamba-version: "*"
           channels: conda-forge,defaults
           channel-priority: true
-          activate-environment: energy_comms
           environment-file: environment.yml
           python-version: 3.9
           auto-activate-base: false
