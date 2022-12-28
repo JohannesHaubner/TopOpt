@@ -10,13 +10,13 @@ jobs:
         shell: bash -l {0}
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+
+      - name: Install Conda environment with Micromamba
+        uses: mamba-org/provision-with-micromamba@main
         with:
-           activate-environment: anaconda-client-env
-           environment-file: environment.yml
-           python-version: 3.9
-           auto-activate-base: false
+          environment-file: environment.yml
+          environment-name: root
+      
       - name: Test with pytest
         run: |
           conda install pytest
