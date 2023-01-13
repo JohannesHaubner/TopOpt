@@ -5,7 +5,7 @@
 
 Code repository for the manuscript
 
->J. Haubner, M. Ulbrich, F. Neumann: A Novel Density Based Approach for Topology Optimization of Stokes Flow, Preprint No. IGDK-2021-05; May 2021. 
+>J. Haubner, F. Neumann, M. Ulbrich: A Novel Density Based Approach for Topology Optimization of Stokes Flow, SIAM J. Sci. Comput. (2022, accepted for publication).
 
 The implementation is based on 
 http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html
@@ -43,3 +43,6 @@ pytest
 - [Johannes Haubner](https://www.github.com/JohannesHaubner)
 - [Franziska Neumann](https://www.mos.ed.tum.de/ftm/personen/mitarbeiter/franziska-neumann-msc/)
 - [Michael Ulbrich](https://www-m1.ma.tum.de/bin/view/Lehrstuhl/MichaelUlbrich)
+
+## Acknowledgement
+We would like to acknowledge [Jørgen Dokken](http://jsdokken.com/) and [Henrik Finsberg](https://finsberg.github.io/) for the help, support and discussions on reproducibility.
