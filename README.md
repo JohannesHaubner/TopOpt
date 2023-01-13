@@ -12,6 +12,8 @@ http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-to
 
 ## Usage/Examples
 
+### Conda
+
 ```
 conda env create -f environment.yml --experimental-solver=libmamba
 conda activate topopt
@@ -27,6 +29,20 @@ It has to be ensured that the [conda-libmamba-solver](https://github.com/conda-i
 For practical problems it is furthermore necessary to link IPOPT against HSL when compiling (see comment in http://www.dolfin-adjoint.org/en/release/documentation/stokes-topology/stokes-topology.html).
 
 For running the MMA examples, it is required to clone the github repository https://github.com/arjendeetman/GCMMA-MMA-Python into the folder mma/MMA_Python.
+
+### Docker
+Alternatively, also Docker can be used.
+```
+docker pull ghcr.io/johanneshaubner/topopt:latest
+
+cd topopt
+docker run -it -v $(pwd):/topopt ghcr.io/johanneshaubner/topopt
+```
+In the Docker container:
+
+```
+python3 topopt/topopt.py
+```
 
 ## Running Tests
 
