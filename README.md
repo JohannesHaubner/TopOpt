@@ -31,7 +31,7 @@ For practical problems it is furthermore necessary to link IPOPT against HSL whe
 For running the MMA examples, it is required to clone the github repository https://github.com/arjendeetman/GCMMA-MMA-Python into the folder mma/MMA_Python.
 
 ### Docker
-Alternatively, also Docker can be used (only build for linux/amd64 platforms):
+Alternatively, also Docker can be used (only built for linux/amd64 platforms):
 ```
 docker pull ghcr.io/johanneshaubner/topopt:latest
 
