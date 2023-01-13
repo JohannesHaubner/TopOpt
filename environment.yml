@@ -4,14 +4,13 @@ channels:
   - defaults
 dependencies:
   - ipopt
-  - cyipopt 
   - fenics-dolfin
   - meshio
   - h5py
   - matplotlib
   - python=3.10
   - numpy
-  - scikit-umfpack
   - pip:
+      - cyipopt
       - git+https://github.com/dolfin-adjoint/pyadjoint.git@2019.1.2
-
+      - scikit-umfpack
